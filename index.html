@@ -232,7 +232,7 @@
     .bsitem.dragov { border-top:2px solid var(--red); }
     .bsdrag { cursor:grab; color:var(--ink-faint); font-size:1rem; padding-top:2px; user-select:none; flex-shrink:0; line-height:1; }
     .bsdrag:active { cursor:grabbing; }
-    .bsta  { flex:1; font-family:'Lora',serif; font-size:0.86rem; background:none; border:none; outline:none; color:var(--ink); resize:none; min-height:34px; line-height:1.55; }
+    .bsta  { flex:1; font-family:'Lora',serif; font-size:0.86rem; background:none; border:none; outline:none; color:var(--ink); resize:none; overflow:hidden; min-height:1.55em; line-height:1.55; display:block; }
     .bsta::placeholder { color:var(--ink-faint); font-style:italic; }
     .bsrm  { background:none; border:none; cursor:pointer; color:var(--ink-faint); font-size:0.75rem; flex-shrink:0; padding:2px; }
     .bsrm:hover { color:var(--red); }
@@ -693,6 +693,43 @@ const newBot = () => ({
   rules:[...DEFAULT_RULES]
 });
 
+/* ═══ AUTOCORRECT: "user" → "{{user}}" ═══ */
+function installUserAutocorrect() {
+  function applyAutocorrect(el, triggerChar) {
+    if (!el || el.readOnly || el.disabled) return false;
+    if (el.tagName !== "INPUT" && el.tagName !== "TEXTAREA") return false;
+    const start = el.selectionStart;
+    const val   = el.value;
+    const before = val.slice(0, start);
+    // match "user" at end of before, not preceded by a word char
+    if (!/(?:^|[^\w])user$/i.test(before)) return false;
+    const wordStart = start - 4;
+    const replacement = "{{user}}" + triggerChar;
+    const newVal = val.slice(0, wordStart) + replacement + val.slice(start);
+    const nativeSetter = Object.getOwnPropertyDescriptor(
+      el.tagName === "INPUT" ? window.HTMLInputElement.prototype : window.HTMLTextAreaElement.prototype,
+      "value"
+    ).set;
+    nativeSetter.call(el, newVal);
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+    const newCursor = wordStart + replacement.length;
+    el.setSelectionRange(newCursor, newCursor);
+    return true;
+  }
+
+  document.addEventListener("keydown", function(e) {
+    // Space: always a word boundary trigger
+    if (e.key === " ") {
+      if (applyAutocorrect(e.target, " ")) e.preventDefault();
+      return;
+    }
+    // Any single printable non-word char (apostrophe, punctuation, etc.)
+    if (e.key.length === 1 && /[^\w]/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      if (applyAutocorrect(e.target, e.key)) e.preventDefault();
+    }
+  }, true);
+}
+
 /* ═══ STORAGE ═══ */
 const loadBots     = () => { try{return JSON.parse(localStorage.getItem("cs_bots")||"[]")}catch{return[]} };
 const saveBots     = b  => localStorage.setItem("cs_bots", JSON.stringify(b));
@@ -759,6 +796,7 @@ function useTheme() {
    APP
 ═══════════════════════════════ */
 function App() {
+  useEffect(() => { installUserAutocorrect(); }, []);
   const [bots,setBots]               = useState(loadBots);
   const [view,setView]               = useState("dash");
   const [editBot,setEditBot]         = useState(null);
@@ -1440,6 +1478,12 @@ function PersonalityPicker({ selected, onChange }) {
 }
 
 /* ═══ BACKSTORY LIST ═══ */
+const autoResize = el => {
+  if (!el) return;
+  el.style.height = "auto";
+  el.style.height = el.scrollHeight + "px";
+};
+
 function BackstoryList({ entries, onChange }) {
   const dragIdx      = useRef(null);
   const [over,setOver] = useState(null);
@@ -1459,6 +1503,8 @@ function BackstoryList({ entries, onChange }) {
       taRefs.current[pendingFocus.current].focus();
       pendingFocus.current = null;
     }
+    // re-measure all after any render (handles new entries, deletes, drag reorder)
+    Object.values(taRefs.current).forEach(autoResize);
   });
 
   return (
@@ -1471,9 +1517,10 @@ function BackstoryList({ entries, onChange }) {
             onDrop={()=>{ if(dragIdx.current!=null&&dragIdx.current!==i){const a=[...entries];const[x]=a.splice(dragIdx.current,1);a.splice(i,0,x);onChange(a);}dragIdx.current=null;setOver(null); }}
             onDragEnd={()=>{dragIdx.current=null;setOver(null);}}>
             <span className="bsdrag">⠿</span>
-            <textarea className="bsta" rows={2} placeholder={`Entry ${i+1}…`}
-              ref={el=>{ if(el) taRefs.current[e.id]=el; else delete taRefs.current[e.id]; }}
-              value={e.text} onChange={ev=>upd(e.id,ev.target.value)}
+            <textarea className="bsta" rows={1} placeholder={`Entry ${i+1}…`}
+              ref={el=>{ if(el){ taRefs.current[e.id]=el; autoResize(el); } else delete taRefs.current[e.id]; }}
+              value={e.text}
+              onChange={ev=>{ upd(e.id,ev.target.value); autoResize(ev.target); }}
               onKeyDown={ev=>{if(ev.key==="Enter"&&!ev.shiftKey){ev.preventDefault();add();}}}/>
             <button className="bsrm" onClick={()=>rm(e.id)}>✕</button>
           </div>
