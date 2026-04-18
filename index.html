@@ -265,13 +265,7 @@
        LEFT PANEL — API Settings
     ════════════════════════════════ */
     .panel-backdrop {
-      position:fixed; inset:0; z-index:499;
-      background:rgba(0,0,0,0);
-      pointer-events:none;
-    }
-    .panel-backdrop.visible {
-      background:rgba(0,0,0,0.28);
-      pointer-events:all;
+      display:none;
     }
     .left-panel {
       position:fixed; top:0; left:0; height:100vh; width:330px;
@@ -579,10 +573,9 @@ function App() {
 
   return (
     <div>
-      {/* backdrop for panels */}
+      {/* backdrop — visual dim only, no click-to-close */}
       <div
         className={`panel-backdrop${leftOpen||rightOpen?" visible":""}`}
-        onClick={()=>{ setLeftOpen(false); setRightOpen(false); }}
       />
 
       <LeftPanel
