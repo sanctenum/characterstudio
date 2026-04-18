@@ -366,6 +366,48 @@
     .chat-msg.assistant .chat-bubble { background:var(--chat-ai); border-left:3px solid var(--red); }
     .chat-thinking { font-family:'Courier Prime',monospace; font-size:0.7rem; color:var(--ink-faint); font-style:italic; align-self:flex-start; padding:4px 2px; }
 
+    /* ── Thinking box ── */
+    .think-box {
+      background: var(--paper-dark);
+      border: 1px dashed var(--paper-line);
+      border-left: 3px solid var(--ink-faint);
+      padding: 0;
+      font-family: 'Courier Prime', monospace;
+      font-size: 0.72rem;
+      color: var(--ink-faint);
+      margin-bottom: 4px;
+      max-width: 100%;
+    }
+    .think-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 5px 9px; cursor: pointer; user-select: none;
+      gap: 6px;
+    }
+    .think-header:hover { color: var(--ink-mid); }
+    .think-label { text-transform: uppercase; letter-spacing: 1.5px; font-size: 0.62rem; }
+    .think-chevron { font-size: 0.65rem; flex-shrink: 0; }
+    .think-body {
+      padding: 8px 10px 9px;
+      border-top: 1px dashed var(--paper-line);
+      white-space: pre-wrap; word-break: break-word;
+      line-height: 1.6; font-style: italic;
+      max-height: 260px; overflow-y: auto;
+    }
+    .think-toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 2px 0 6px;
+    }
+    .think-toggle-lbl {
+      font-family: 'Courier Prime', monospace; font-size: 0.62rem;
+      text-transform: uppercase; letter-spacing: 1.5px; color: var(--ink-faint);
+    }
+    .think-tog { position:relative; display:inline-block; width:36px; height:18px; flex-shrink:0; }
+    .think-tog input { opacity:0; width:0; height:0; }
+    .think-tslider { position:absolute; inset:0; cursor:pointer; background:var(--paper-dark); border:1.5px solid var(--ink-faint); }
+    .think-tslider::before { content:''; position:absolute; height:10px; width:10px; left:2px; bottom:2px; background:var(--ink-faint); transition:transform 0.2s, background 0.2s; }
+    .think-tog input:checked + .think-tslider { border-color:var(--red); }
+    .think-tog input:checked + .think-tslider::before { transform:translateX(18px); background:var(--red); }
+
     .chat-foot { padding:10px 12px; border-top:1px solid var(--paper-line); display:flex; flex-direction:column; gap:7px; flex-shrink:0; }
     .chat-model-row { display:flex; align-items:center; justify-content:space-between; }
     .chat-model-lbl { font-family:'Courier Prime',monospace; font-size:0.62rem; color:var(--ink-faint); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:200px; }
@@ -736,7 +778,16 @@ const saveBots     = b  => localStorage.setItem("cs_bots", JSON.stringify(b));
 const loadTheme    = () => localStorage.getItem("cs_theme")==="dark";
 const loadSettings = () => { try{return JSON.parse(localStorage.getItem("cs_settings")||"{}")}catch{return{}} };
 const saveSettings = s  => localStorage.setItem("cs_settings", JSON.stringify(s));
-const loadChats    = () => { try{return JSON.parse(localStorage.getItem("cs_chats")||"{}")}catch{return{}} };
+const loadChats = () => {
+  try {
+    const raw = JSON.parse(localStorage.getItem("cs_chats") || "{}");
+    if (typeof raw !== "object" || Array.isArray(raw) || raw === null) return {};
+    // ensure every stored history is actually an array
+    const clean = {};
+    for (const [k,v] of Object.entries(raw)) { if (Array.isArray(v)) clean[k] = v; }
+    return clean;
+  } catch { return {}; }
+};
 let _saveChatsTimer = null;
 const saveChats = c => {
   clearTimeout(_saveChatsTimer);
@@ -800,7 +851,18 @@ function useTheme() {
    APP
 ═══════════════════════════════ */
 function App() {
-  useEffect(() => { installUserAutocorrect(); }, []);
+  useEffect(() => {
+    installUserAutocorrect();
+    // clean up any corrupted chat entries from previous sessions
+    try {
+      const raw = JSON.parse(localStorage.getItem("cs_chats") || "{}");
+      if (typeof raw === "object" && !Array.isArray(raw) && raw !== null) {
+        let dirty = false;
+        for (const k of Object.keys(raw)) { if (!Array.isArray(raw[k])) { delete raw[k]; dirty = true; } }
+        if (dirty) localStorage.setItem("cs_chats", JSON.stringify(raw));
+      }
+    } catch { try { localStorage.removeItem("cs_chats"); } catch {} }
+  }, []);
   const [bots,setBots]               = useState(loadBots);
   const [view,setView]               = useState("dash");
   const [editBot,setEditBot]         = useState(null);
@@ -855,8 +917,8 @@ function App() {
 
   /* per-bot chat history */
   const botId        = editBot?.id;
-  const chatHistory  = botId ? (chats[botId]||[]) : [];
-  const setChatHist  = msgs => { if(!botId)return; setChats(p=>({...p,[botId]:msgs})); };
+  const chatHistory  = botId ? (Array.isArray(chats[botId]) ? chats[botId] : []) : [];
+  const setChatHist  = msgs => { if(!botId)return; const safe = Array.isArray(msgs)?msgs:[]; setChats(p=>({...p,[botId]:safe})); };
   const getDraft     = () => liveDraftRef.current || editBot;
 
   return (
@@ -1128,31 +1190,70 @@ function LeftPanel({ open, onClose, settings, onSettings, models, modLoading, mo
 /* ═══════════════════════════════
    RIGHT PANEL — Chat
 ═══════════════════════════════ */
-function RightPanel({ open, onClose, settings, getDraft, chatHistory, setChatHistory }) {
-  const [input,setInput]     = useState("");
-  const [thinking,setThink]  = useState(false);
-  const bottomRef            = useRef(null);
+/* ── Parse <think> tags out of a raw reply ── */
+function parseThink(raw) {
+  if (!raw) return { thinkContent: "", content: "" };
+  // collect all <think>…</think> blocks
+  const thinkParts = [];
+  const cleaned = raw.replace(/<think>([\s\S]*?)<\/think>/gi, (_, inner) => {
+    thinkParts.push(inner.trim());
+    return "";
+  });
+  return {
+    thinkContent: thinkParts.join("\n\n"),
+    content: cleaned.trim(),
+  };
+}
 
-  useEffect(()=>{ if(bottomRef.current) bottomRef.current.scrollIntoView({behavior:"smooth"}); },[chatHistory,thinking]);
+/* ── Small collapsible thought box ── */
+function ThinkBox({ text }) {
+  const [open, setOpen] = useState(false);
+  if (!text) return null;
+  return (
+    <div className="think-box">
+      <div className="think-header" onClick={()=>setOpen(o=>!o)}>
+        <span className="think-label">🧠 Thought process</span>
+        <span className="think-chevron">{open?"▲":"▼"}</span>
+      </div>
+      {open && <div className="think-body">{text}</div>}
+    </div>
+  );
+}
+
+function RightPanel({ open, onClose, settings, getDraft, chatHistory, setChatHistory }) {
+  const [input,setInput]       = useState("");
+  const [isLoading,setLoading] = useState(false);
+  const [showThink,setShowThink] = useState(false);
+  const bottomRef              = useRef(null);
+
+  useEffect(()=>{ if(bottomRef.current) bottomRef.current.scrollIntoView({behavior:"smooth"}); },[chatHistory,isLoading]);
 
   const hasApi = !!(settings.apiKey && settings.selectedModel);
   const draft  = getDraft();
   const charNames = draft?.characters?.map(c=>c.name||"Unnamed").join(", ")||"—";
 
+  /* Strip think content from messages sent to the API (keep only the visible reply) */
+  const apiHistory = chatHistory.map(m =>
+    m.role === "assistant"
+      ? { role: "assistant", content: m.content || m._rawContent || "" }
+      : m
+  );
+
   const send = async () => {
     const text = input.trim();
-    if (!text||thinking||!hasApi) return;
+    if (!text||isLoading||!hasApi) return;
     setInput("");
 
     const sysPmt   = buildSystemPrompt(getDraft(), settings);
     const userMsg  = {role:"user",content:text};
-    const nextHist = [...chatHistory, userMsg];
-    setChatHistory(nextHist);
-    setThink(true);
+    const nextApiHist = [...apiHistory, userMsg];
+    const nextDisplayHist = [...chatHistory, userMsg];
+    setChatHistory(nextDisplayHist);
+    setLoading(true);
 
     const body = {
       model: settings.selectedModel,
-      messages: [{role:"system",content:sysPmt},...nextHist],
+      messages: [{role:"system",content:sysPmt},...nextApiHist],
       max_tokens: settings.proxyMaxTokens || 1024,
       stream: !!settings.proxyStream,
     };
@@ -1176,9 +1277,10 @@ function RightPanel({ open, onClose, settings, getDraft, chatHistory, setChatHis
       if (settings.proxyStream) {
         const reader = res.body.getReader();
         const dec    = new TextDecoder();
-        let buf = "", reply = "";
-        setChatHistory([...nextHist,{role:"assistant",content:""}]);
-        setThink(false);
+        let buf = "", rawReply = "";
+        const { thinkContent: th0, content: c0 } = parseThink("");
+        setChatHistory([...nextDisplayHist, {role:"assistant", content:"", thinkContent:"", _rawContent:""}]);
+        setLoading(false);
         while (true) {
           const {done,value} = await reader.read();
           if (done) break;
@@ -1193,43 +1295,26 @@ function RightPanel({ open, onClose, settings, getDraft, chatHistory, setChatHis
                 const chunk = JSON.parse(l.slice(6));
                 const delta = chunk.choices?.[0]?.delta?.content;
                 if (typeof delta === "string") {
-                  reply += delta;
-                  setChatHistory(h=>{
-                    const next=[...h];
-                    next[next.length-1]={role:"assistant",content:reply};
-                    return next;
-                  });
+                  rawReply += delta;
+                  const { thinkContent, content } = parseThink(rawReply);
+                  setChatHistory([...nextDisplayHist, {role:"assistant", content, thinkContent, _rawContent:rawReply}]);
                 }
               } catch{}
             }
           }
         }
-        // flush any remaining partial line
-        if (buf.trim().startsWith("data: ")) {
-          try {
-            const chunk = JSON.parse(buf.trim().slice(6));
-            const delta = chunk.choices?.[0]?.delta?.content;
-            if (typeof delta === "string" && delta) {
-              reply += delta;
-              setChatHistory(h=>{
-                const next=[...h]; next[next.length-1]={role:"assistant",content:reply}; return next;
-              });
-            }
-          } catch{}
-        }
-        if (!reply) {
-          setChatHistory(h=>{
-            const next=[...h]; next[next.length-1]={role:"assistant",content:"(empty response)"}; return next;
-          });
-        }
+        const finalRaw = rawReply || "(empty response)";
+        const { thinkContent, content } = parseThink(finalRaw);
+        setChatHistory([...nextDisplayHist, {role:"assistant", content: content||finalRaw, thinkContent, _rawContent:finalRaw}]);
       } else {
         const data  = await res.json();
-        const reply = data.choices?.[0]?.message?.content || data.error?.message || "(empty response)";
-        setChatHistory([...nextHist,{role:"assistant",content:reply}]);
+        const rawReply = data.choices?.[0]?.message?.content || data.error?.message || "(empty response)";
+        const { thinkContent, content } = parseThink(rawReply);
+        setChatHistory([...nextDisplayHist,{role:"assistant", content: content||rawReply, thinkContent, _rawContent:rawReply}]);
       }
     } catch(e) {
-      setChatHistory(h=>[...nextHist,{role:"assistant",content:`⚠ Error: ${e.message}`}]);
-    } finally { setThink(false); }
+      setChatHistory([...nextDisplayHist,{role:"assistant",content:`⚠ Error: ${e.message}`,thinkContent:""}]);
+    } finally { setLoading(false); }
   };
 
   const onKey = e => { if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();} };
@@ -1250,7 +1335,7 @@ function RightPanel({ open, onClose, settings, getDraft, chatHistory, setChatHis
       ) : (
         <>
           <div className="chat-msgs">
-            {chatHistory.length===0 && !thinking && (
+            {chatHistory.length===0 && !isLoading && (
               <div className="chat-empty">
                 <div className="chat-empty-t">Begin the conversation</div>
                 <div className="chat-empty-s">Characters in memory:<br/>{charNames}</div>
@@ -1259,10 +1344,13 @@ function RightPanel({ open, onClose, settings, getDraft, chatHistory, setChatHis
             {chatHistory.map((m,i)=>(
               <div key={i} className={`chat-msg ${m.role}`}>
                 <span className="chat-role-lbl">{m.role==="user"?"You":"Assistant"}</span>
+                {m.role==="assistant" && showThink && m.thinkContent && (
+                  <ThinkBox text={m.thinkContent}/>
+                )}
                 <div className="chat-bubble">{m.content}</div>
               </div>
             ))}
-            {thinking && <div className="chat-thinking">Thinking…</div>}
+            {isLoading && <div className="chat-thinking">Thinking…</div>}
             <div ref={bottomRef}/>
           </div>
 
@@ -1271,12 +1359,19 @@ function RightPanel({ open, onClose, settings, getDraft, chatHistory, setChatHis
               <span className="chat-model-lbl">Model: <span>{modelShort}</span></span>
               <button className="chat-clear-btn" onClick={()=>setChatHistory([])}>Clear</button>
             </div>
+            <div className="think-toggle-row">
+              <span className="think-toggle-lbl">Show thinking</span>
+              <label className="think-tog">
+                <input type="checkbox" checked={showThink} onChange={e=>setShowThink(e.target.checked)}/>
+                <span className="think-tslider"/>
+              </label>
+            </div>
             <div className="chat-input-row">
               <textarea className="chat-ta" rows={2}
                 placeholder="Ask about your characters…"
                 value={input} onChange={e=>setInput(e.target.value)} onKeyDown={onKey}
               />
-              <button className="chat-send" onClick={send} disabled={!input.trim()||thinking}>➤</button>
+              <button className="chat-send" onClick={send} disabled={!input.trim()||isLoading}>➤</button>
             </div>
           </div>
         </>
