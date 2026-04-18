@@ -442,7 +442,7 @@ function formatDocx(bot) {
     s += `Personality: ${c.personality.join(", ")}\n\n`;
     s += `Motivation: ${c.motivation || ""}\n\n`;
     s += `> Backstory\n\n`;
-    c.backstory.forEach(e => { if (e.text.trim()) s += `${e.text}\n\n`; });
+    c.backstory.forEach(e => { if (e.text.trim()) s += `• ${e.text.trim()}\n\n`; });
     s += `> Intimacy Details\n\n`;
     s += `${c.intimacyDetails || ""}\n\n`;
   });
@@ -458,7 +458,7 @@ function formatDocx(bot) {
   s += `Important Supporting Characters: ${bot.scenario.importantSupportingCharacters}\n\n`;
   s += `Starting Situation (in intro message 1): ${bot.scenario.startingSituation}\n\n`;
   s += `\n> Rules\n\n`;
-  bot.rules.forEach(r => { s += `- ${r}\n\n`; });
+  bot.rules.forEach(r => { s += `• ${r}\n\n`; });
   return s;
 }
 
@@ -525,9 +525,12 @@ function App() {
   const handleSave   = (b) => { setBots(p => { const i=p.findIndex(x=>x.id===b.id); if(i>=0){const n=[...p];n[i]=b;return n;} return [...p,b]; }); goBack(); };
   const handleDelete = (id) => { setBots(p=>p.filter(b=>b.id!==id)); setPreviewBot(null); };
 
+  const liveDraftRef = useRef(null);
+
   const handleCopy = () => {
-    if (!editBot) return;
-    navigator.clipboard.writeText(formatDocx(editBot)).then(() => {
+    const data = liveDraftRef.current || editBot;
+    if (!data) return;
+    navigator.clipboard.writeText(formatDocx(data)).then(() => {
       setCopyOk(true);
       setTimeout(() => setCopyOk(false), 2200);
     });
@@ -539,7 +542,7 @@ function App() {
 
         {view === "dash"
           ? <Dashboard bots={bots} onNew={goNew} onPreview={setPreviewBot} />
-          : <BotEditor bot={editBot} onSave={handleSave} onBack={goBack} />
+          : <BotEditor bot={editBot} onSave={handleSave} onBack={goBack} onDraftChange={d => { liveDraftRef.current = d; }} />
         }
 
         {previewBot && (
@@ -652,7 +655,7 @@ function PreviewModal({ bot, onClose, onEdit, onDelete }) {
 
 /* ═══════════════ BOT EDITOR ═══════════════ */
 
-function BotEditor({ bot, onSave, onBack }) {
+function BotEditor({ bot, onSave, onBack, onDraftChange }) {
   const [draft, setDraft] = useState(() => JSON.parse(JSON.stringify(bot)));
 
   const pSc  = (k,v)   => setDraft(d => ({...d, scenario:{...d.scenario,[k]:v}}));
@@ -660,9 +663,8 @@ function BotEditor({ bot, onSave, onBack }) {
   const addC = ()      => setDraft(d => ({...d, characters:[...d.characters, newChar()]}));
   const rmC  = (id)    => setDraft(d => ({...d, characters:d.characters.filter(c=>c.id!==id)}));
 
-  // Expose draft upward so the copy button can access it
   useEffect(() => {
-    if (onSave._setDraftRef) onSave._setDraftRef(draft);
+    if (onDraftChange) onDraftChange(draft);
   }, [draft]);
 
   return (
