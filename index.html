@@ -9,70 +9,71 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;1,400&family=Courier+Prime:ital@0;1&display=swap" rel="stylesheet">
   <style>
-    /* ══════════════════════════════════
-       LIGHT MODE
-    ══════════════════════════════════ */
     :root {
-      --bg:              #e8dfc8;
-      --paper:           #f5f0e0;
-      --paper-dark:      #e6dcc5;
-      --paper-line:      #c8b990;
-      --sc-bg:           #ede3c4;
-      --sc-border:       #b09a6a;
-      --ink:             #1a1208;
-      --ink-mid:         #3e3320;
-      --ink-faint:       #9e8f72;
-      --red:             #8b2e1a;
-      --tape:            rgba(245,225,120,0.85);
-      --shadow:          rgba(80,55,20,0.16);
-      --body-line-h:     #c8b990;
-      --body-line-v:     transparent;
+      --bg:          #e8dfc8;
+      --paper:       #f5f0e0;
+      --paper-dark:  #e6dcc5;
+      --paper-line:  #c8b990;
+      --sc-bg:       #ede3c4;
+      --sc-border:   #b09a6a;
+      --ink:         #1a1208;
+      --ink-mid:     #3e3320;
+      --ink-faint:   #9e8f72;
+      --red:         #8b2e1a;
+      --tape:        rgba(245,225,120,0.85);
+      --shadow:      rgba(80,55,20,0.16);
+      --body-line-h: #c8b990;
+      --body-line-v: transparent;
+      --panel-bg:    #ede5cc;
+      --chat-user:   #e6dcc5;
+      --chat-ai:     #f5f0e0;
     }
-
-    /* ══════════════════════════════════
-       DARK MODE — sketch paper
-    ══════════════════════════════════ */
     html.dark {
-      --bg:              #0f0e0b;
-      --paper:           #1a1810;
-      --paper-dark:      #222018;
-      --paper-line:      #2e2b20;
-      --sc-bg:           #13120d;
-      --sc-border:       #3a3628;
-      --ink:             #d2c8a6;
-      --ink-mid:         #a8987a;
-      --ink-faint:       #5e5540;
-      --red:             #c45a3c;
-      --tape:            rgba(65,58,28,0.9);
-      --shadow:          rgba(0,0,0,0.55);
-      --body-line-h:     rgba(210,190,130,0.07);
-      --body-line-v:     rgba(210,190,130,0.03);
+      --bg:          #0f0e0b;
+      --paper:       #1a1810;
+      --paper-dark:  #222018;
+      --paper-line:  #2e2b20;
+      --sc-bg:       #13120d;
+      --sc-border:   #3a3628;
+      --ink:         #d2c8a6;
+      --ink-mid:     #a8987a;
+      --ink-faint:   #5e5540;
+      --red:         #c45a3c;
+      --tape:        rgba(65,58,28,0.9);
+      --shadow:      rgba(0,0,0,0.55);
+      --body-line-h: rgba(210,190,130,0.07);
+      --body-line-v: rgba(210,190,130,0.03);
+      --panel-bg:    #161410;
+      --chat-user:   #222018;
+      --chat-ai:     #1a1810;
     }
 
-    /* Only animate on explicit user actions, not on every value change */
-    .theme-transition * {
+    /* ── smooth theme fade ── */
+    *, *::before, *::after {
+      box-sizing: border-box; margin: 0; padding: 0;
       transition:
-        background-color 0.05s,
-        border-color     0.05s,
-        color            0.05s,
-        box-shadow       0.05s !important;
+        background-color 0.4s ease,
+        border-color     0.4s ease,
+        color            0.4s ease,
+        box-shadow       0.4s ease;
     }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* don't animate layout/transform/opacity with theme transition */
+    *, *::before, *::after {
+      transition:
+        background-color 0.4s ease,
+        border-color     0.4s ease,
+        color            0.4s ease,
+        box-shadow       0.4s ease,
+        transform        0.2s ease,
+        opacity          0.2s ease;
+    }
 
     body {
       font-family: 'Lora', Georgia, serif;
       background-color: var(--bg);
       background-image:
-        repeating-linear-gradient(
-          transparent 0px, transparent 27px,
-          var(--body-line-h) 27px, var(--body-line-h) 28.5px
-        ),
-        repeating-linear-gradient(
-          90deg,
-          transparent 0px, transparent 27px,
-          var(--body-line-v) 27px, var(--body-line-v) 28.5px
-        );
+        repeating-linear-gradient(transparent 0px,transparent 27px,var(--body-line-h) 27px,var(--body-line-h) 28.5px),
+        repeating-linear-gradient(90deg,transparent 0px,transparent 27px,var(--body-line-v) 27px,var(--body-line-v) 28.5px);
       color: var(--ink);
       min-height: 100vh;
       overflow-x: hidden;
@@ -82,295 +83,326 @@
     ::-webkit-scrollbar-track { background: var(--bg); }
     ::-webkit-scrollbar-thumb { background: var(--paper-line); border-radius: 3px; }
 
-    /* ══════════════════════════════════
-       3-D FLIP
-    ══════════════════════════════════ */
-    .flip-outer {
-      perspective: 1500px;
-      perspective-origin: 50% 38%;
-    }
-    .flip-inner { transform-style: preserve-3d; }
-
-    /* ══════════════════════════════════
-       FLOATING BUTTONS
-    ══════════════════════════════════ */
+    /* ── FAB copy ── */
     .fab-cluster {
       position: fixed; bottom: 28px; right: 26px;
       display: flex; flex-direction: column;
-      align-items: flex-end; gap: 10px;
-      z-index: 900;
+      align-items: flex-end; gap: 10px; z-index: 300;
     }
-
-    /* Copy */
     .fab-copy {
       background: var(--ink); color: var(--paper);
-      border: none; cursor: pointer;
-      padding: 14px 26px;
+      border: none; cursor: pointer; padding: 14px 26px;
       font-family: 'Courier Prime', monospace;
       font-size: 0.88rem; text-transform: uppercase; letter-spacing: 1.2px;
       display: flex; align-items: center; gap: 10px;
-      box-shadow: 4px 5px 0 var(--shadow);
-      transition: background 0.14s, transform 0.1s, box-shadow 0.12s;
-      white-space: nowrap;
+      box-shadow: 4px 5px 0 var(--shadow); white-space: nowrap;
     }
-    .fab-copy:hover  { background: var(--red); transform: translateY(-2px); box-shadow: 5px 7px 0 var(--shadow); }
+    .fab-copy:hover  { background: var(--red); transform: translateY(-2px); }
     .fab-copy:active { transform: scale(0.97); }
     .fab-copy.ok     { background: #2c6e3a; }
     .fab-copy-icon   { font-size: 1.1rem; line-height: 1; }
 
-    /* Theme toggle */
-    .fab-theme {
-      width: 46px; height: 46px;
-      background: var(--paper); border: 1.5px solid var(--ink-faint);
-      box-shadow: 3px 4px 0 var(--shadow);
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.1rem;
-      transition: background 0.14s, transform 0.1s, box-shadow 0.12s;
-    }
-    .fab-theme:hover  { transform: translateY(-2px); box-shadow: 4px 6px 0 var(--shadow); }
-    .fab-theme:active { transform: scale(0.93); }
-
-    /* ══════════════════════════════════
-       DASHBOARD
-    ══════════════════════════════════ */
+    /* ── DASHBOARD ── */
     .dashboard { max-width: 1080px; margin: 0 auto; padding: 48px 28px 120px; }
+    .dash-header { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:44px; padding-bottom:14px; border-bottom:2.5px solid var(--ink); gap:16px; flex-wrap:wrap; }
+    .dash-title  { font-family:'Playfair Display',serif; font-size:clamp(1.9rem,4vw,2.6rem); font-weight:700; line-height:1; }
+    .dash-subtitle { font-family:'Courier Prime',monospace; font-size:0.71rem; color:var(--ink-faint); text-transform:uppercase; letter-spacing:2px; margin-top:6px; }
+    .btn-new { font-family:'Courier Prime',monospace; font-size:0.82rem; background:var(--ink); color:var(--paper); border:none; padding:11px 22px; cursor:pointer; letter-spacing:1.2px; text-transform:uppercase; white-space:nowrap; }
+    .btn-new:hover { background:var(--red); transform:translateY(-1px); }
+    .dash-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .btn-dash-util { font-family:'Courier Prime',monospace; font-size:0.78rem; background:none; border:1.5px solid var(--ink-faint); color:var(--ink-faint); padding:9px 14px; cursor:pointer; text-transform:uppercase; letter-spacing:1px; white-space:nowrap; }
+    .btn-dash-util:hover { border-color:var(--ink); color:var(--ink); }
 
-    .dash-header {
-      display: flex; align-items: flex-end; justify-content: space-between;
-      margin-bottom: 44px; padding-bottom: 14px;
-      border-bottom: 2.5px solid var(--ink);
-      gap: 16px; flex-wrap: wrap;
-    }
-    .dash-title {
-      font-family: 'Playfair Display', serif;
-      font-size: clamp(1.9rem, 4vw, 2.6rem);
-      font-weight: 700; line-height: 1;
-    }
-    .dash-subtitle {
-      font-family: 'Courier Prime', monospace; font-size: 0.71rem;
-      color: var(--ink-faint); text-transform: uppercase;
-      letter-spacing: 2px; margin-top: 6px;
-    }
-    .btn-new {
-      font-family: 'Courier Prime', monospace; font-size: 0.82rem;
-      background: var(--ink); color: var(--paper);
-      border: none; padding: 11px 22px; cursor: pointer;
-      letter-spacing: 1.2px; text-transform: uppercase;
-      transition: background 0.14s, transform 0.1s; white-space: nowrap;
-    }
-    .btn-new:hover { background: var(--red); transform: translateY(-1px); }
+    .bots-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(248px,1fr)); gap:28px; }
+    .empty-state { grid-column:1/-1; text-align:center; padding:90px 20px; color:var(--ink-faint); }
+    .empty-title { font-family:'Playfair Display',serif; font-size:1.4rem; font-style:italic; margin-bottom:10px; }
+    .empty-hint  { font-family:'Courier Prime',monospace; font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; }
+    .bot-card { background:var(--paper); border:1px solid var(--paper-dark); padding:22px 20px 18px; cursor:pointer; position:relative; box-shadow:4px 5px 0 var(--shadow); }
+    .bot-card::before { content:''; position:absolute; top:-6px; left:50%; transform:translateX(-50%); width:64px; height:10px; background:var(--tape); border:1px solid rgba(160,130,30,0.3); }
+    .bot-card:nth-child(3n+1) { transform:rotate(-0.6deg); }
+    .bot-card:nth-child(3n+2) { transform:rotate(0.4deg); }
+    .bot-card:nth-child(3n+3) { transform:rotate(-0.2deg); }
+    .bot-card:hover { transform:translateY(-4px) rotate(0deg)!important; box-shadow:6px 10px 0 var(--shadow); }
+    .bot-date    { font-family:'Courier Prime',monospace; font-size:0.68rem; color:var(--ink-faint); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
+    .bot-title   { font-family:'Playfair Display',serif; font-size:1.15rem; font-weight:700; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid var(--paper-line); }
+    .bot-chars   { font-size:0.84rem; color:var(--ink-mid); margin-bottom:6px; }
+    .bot-setting { font-size:0.78rem; color:var(--ink-faint); font-style:italic; line-height:1.5; }
 
-    .bots-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(248px, 1fr));
-      gap: 28px;
-    }
-    .empty-state { grid-column: 1/-1; text-align: center; padding: 90px 20px; color: var(--ink-faint); }
-    .empty-title { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-style: italic; margin-bottom: 10px; }
-    .empty-hint  { font-family: 'Courier Prime', monospace; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; }
+    /* ── MODAL ── */
+    .overlay { position:fixed; inset:0; background:rgba(8,6,2,0.68); display:flex; align-items:center; justify-content:center; z-index:800; padding:20px; animation:oFade 0.14s ease; }
+    @keyframes oFade { from{opacity:0}to{opacity:1} }
+    .mpaper { background:var(--paper); max-width:500px; width:100%; max-height:85vh; overflow-y:auto; position:relative; box-shadow:10px 14px 0 var(--shadow),0 0 0 1px var(--paper-dark); animation:mSlide 0.18s ease; }
+    @keyframes mSlide { from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1} }
+    .mtape  { height:11px; background:var(--tape); border-bottom:1px solid rgba(160,130,30,0.2); }
+    .mbody  { padding:28px 28px 24px; }
+    .mtitle { font-family:'Playfair Display',serif; font-size:1.55rem; font-weight:700; margin-bottom:4px; }
+    .mdate  { font-family:'Courier Prime',monospace; font-size:0.68rem; color:var(--ink-faint); letter-spacing:1px; text-transform:uppercase; margin-bottom:20px; }
+    .mchar-row    { display:flex; flex-wrap:wrap; gap:5px 12px; align-items:baseline; padding:8px 0; border-bottom:1px dashed var(--paper-line); }
+    .mchar-name   { font-family:'Playfair Display',serif; font-weight:600; font-size:0.95rem; }
+    .mchar-meta   { font-family:'Courier Prime',monospace; font-size:0.68rem; color:var(--ink-faint); text-transform:uppercase; }
+    .mchar-traits { font-family:'Courier Prime',monospace; font-size:0.68rem; color:var(--red); }
+    .mpremise { font-size:0.86rem; color:var(--ink-mid); font-style:italic; line-height:1.65; padding:12px 0; margin:12px 0; border-top:1px solid var(--paper-line); border-bottom:1px solid var(--paper-line); }
+    .mactions { display:flex; gap:10px; flex-wrap:wrap; }
+    .mclose   { position:absolute; top:17px; right:17px; background:none; border:none; cursor:pointer; font-size:1rem; color:var(--ink-faint); }
+    .mclose:hover { color:var(--ink); }
+    .btn-a { font-family:'Courier Prime',monospace; font-size:0.78rem; text-transform:uppercase; letter-spacing:1px; border:1.5px solid; padding:9px 18px; cursor:pointer; background:transparent; }
+    .btn-ink  { border-color:var(--ink); color:var(--ink); }
+    .btn-ink:hover  { background:var(--ink); color:var(--paper); }
+    .btn-red  { border-color:var(--red); color:var(--red); }
+    .btn-red:hover  { background:var(--red); color:var(--paper); }
+    .btn-dim  { border-color:var(--ink-faint); color:var(--ink-faint); }
+    .btn-dim:hover  { border-color:var(--ink); color:var(--ink); }
 
-    .bot-card {
-      background: var(--paper); border: 1px solid var(--paper-dark);
-      padding: 22px 20px 18px; cursor: pointer; position: relative;
-      box-shadow: 4px 5px 0 var(--shadow);
-      transition: transform 0.18s, box-shadow 0.18s;
-    }
-    .bot-card::before {
-      content: ''; position: absolute; top: -6px; left: 50%; transform: translateX(-50%);
-      width: 64px; height: 10px; background: var(--tape);
-      border: 1px solid rgba(160,130,30,0.3);
-    }
-    .bot-card:nth-child(3n+1) { transform: rotate(-0.6deg); }
-    .bot-card:nth-child(3n+2) { transform: rotate( 0.4deg); }
-    .bot-card:nth-child(3n+3) { transform: rotate(-0.2deg); }
-    .bot-card:hover { transform: translateY(-4px) rotate(0deg) !important; box-shadow: 6px 10px 0 var(--shadow); }
-
-    .bot-date    { font-family: 'Courier Prime', monospace; font-size: 0.68rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-    .bot-title   { font-family: 'Playfair Display', serif; font-size: 1.15rem; font-weight: 700; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--paper-line); }
-    .bot-chars   { font-size: 0.84rem; color: var(--ink-mid); margin-bottom: 6px; }
-    .bot-setting { font-size: 0.78rem; color: var(--ink-faint); font-style: italic; line-height: 1.5; }
-
-    /* ══════════════════════════════════
-       MODAL
-    ══════════════════════════════════ */
-    .overlay {
-      position: fixed; inset: 0; background: rgba(8,6,2,0.68);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 800; padding: 20px;
-      animation: oFade 0.14s ease;
-    }
-    @keyframes oFade { from { opacity:0 } to { opacity:1 } }
-
-    .mpaper {
-      background: var(--paper); max-width: 500px; width: 100%;
-      max-height: 85vh; overflow-y: auto; position: relative;
-      box-shadow: 10px 14px 0 var(--shadow), 0 0 0 1px var(--paper-dark);
-      animation: mSlide 0.18s ease;
-    }
-    @keyframes mSlide { from { transform: translateY(14px); opacity:0 } to { transform: none; opacity:1 } }
-
-    .mtape  { height: 11px; background: var(--tape); border-bottom: 1px solid rgba(160,130,30,0.2); }
-    .mbody  { padding: 28px 28px 24px; }
-    .mtitle { font-family: 'Playfair Display', serif; font-size: 1.55rem; font-weight: 700; margin-bottom: 4px; }
-    .mdate  { font-family: 'Courier Prime', monospace; font-size: 0.68rem; color: var(--ink-faint); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 20px; }
-
-    .mchar-row    { display: flex; flex-wrap: wrap; gap: 5px 12px; align-items: baseline; padding: 8px 0; border-bottom: 1px dashed var(--paper-line); }
-    .mchar-name   { font-family: 'Playfair Display', serif; font-weight: 600; font-size: 0.95rem; }
-    .mchar-meta   { font-family: 'Courier Prime', monospace; font-size: 0.68rem; color: var(--ink-faint); text-transform: uppercase; }
-    .mchar-traits { font-family: 'Courier Prime', monospace; font-size: 0.68rem; color: var(--red); }
-
-    .mpremise { font-size: 0.86rem; color: var(--ink-mid); font-style: italic; line-height: 1.65; padding: 12px 0; margin: 12px 0; border-top: 1px solid var(--paper-line); border-bottom: 1px solid var(--paper-line); }
-    .mactions { display: flex; gap: 10px; flex-wrap: wrap; }
-    .mclose   { position: absolute; top: 17px; right: 17px; background: none; border: none; cursor: pointer; font-size: 1rem; color: var(--ink-faint); }
-    .mclose:hover { color: var(--ink); }
-
-    .btn-a { font-family: 'Courier Prime', monospace; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; border: 1.5px solid; padding: 9px 18px; cursor: pointer; background: transparent; transition: all 0.13s; }
-    .btn-ink  { border-color: var(--ink); color: var(--ink); }
-    .btn-ink:hover  { background: var(--ink); color: var(--paper); }
-    .btn-red  { border-color: var(--red); color: var(--red); }
-    .btn-red:hover  { background: var(--red); color: var(--paper); }
-    .btn-dim  { border-color: var(--ink-faint); color: var(--ink-faint); }
-    .btn-dim:hover  { border-color: var(--ink); color: var(--ink); }
-
-    /* ══════════════════════════════════
-       EDITOR
-    ══════════════════════════════════ */
-    .editor { min-height: 100vh; }
-
+    /* ── EDITOR ── */
+    .editor { min-height:100vh; }
     .topbar {
-      background: var(--paper); border-bottom: 2.5px solid var(--ink);
-      padding: 13px 24px; display: flex; align-items: center; gap: 14px;
-      position: sticky; top: 0; z-index: 200;
-      box-shadow: 0 3px 0 var(--shadow); flex-wrap: wrap;
+      background:var(--paper); border-bottom:2.5px solid var(--ink);
+      padding:10px 18px; display:flex; align-items:center; gap:10px;
+      position:sticky; top:0; z-index:200;
+      box-shadow:0 3px 0 var(--shadow); flex-wrap:nowrap;
     }
-    .btn-back { font-family: 'Courier Prime', monospace; font-size: 0.76rem; background: none; border: none; cursor: pointer; color: var(--ink-mid); text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
-    .btn-back:hover { color: var(--red); }
-
-    .title-inp {
-      flex: 1; font-family: 'Playfair Display', serif;
-      font-size: clamp(1rem, 2.4vw, 1.25rem); font-weight: 600;
-      background: none; border: none; border-bottom: 1px dashed var(--paper-line);
-      outline: none; color: var(--ink); min-width: 100px;
+    .btn-back { font-family:'Courier Prime',monospace; font-size:0.76rem; background:none; border:none; cursor:pointer; color:var(--ink-mid); text-transform:uppercase; letter-spacing:1px; white-space:nowrap; flex-shrink:0; }
+    .btn-back:hover { color:var(--red); }
+    .title-inp { flex:1; font-family:'Playfair Display',serif; font-size:clamp(0.9rem,2vw,1.2rem); font-weight:600; background:none; border:none; border-bottom:1px dashed var(--paper-line); outline:none; color:var(--ink); min-width:60px; }
+    .title-inp::placeholder { color:var(--ink-faint); font-style:italic; }
+    .btn-save { font-family:'Courier Prime',monospace; font-size:0.76rem; background:var(--red); color:var(--paper); border:none; padding:9px 18px; cursor:pointer; letter-spacing:1px; text-transform:uppercase; white-space:nowrap; flex-shrink:0; }
+    .btn-save:hover { background:var(--ink); }
+    .btn-topbar-icon {
+      width:34px; height:34px; flex-shrink:0;
+      background:var(--paper-dark); border:1.5px solid var(--ink-faint);
+      cursor:pointer; display:flex; align-items:center; justify-content:center;
+      font-size:0.95rem; color:var(--ink-mid);
     }
-    .title-inp::placeholder { color: var(--ink-faint); font-style: italic; }
-
-    .btn-save { font-family: 'Courier Prime', monospace; font-size: 0.78rem; background: var(--red); color: var(--paper); border: none; padding: 10px 22px; cursor: pointer; letter-spacing: 1px; text-transform: uppercase; white-space: nowrap; }
-    .btn-save:hover { background: var(--ink); }
-
-    .ebody { max-width: 800px; margin: 0 auto; padding: 36px 24px 140px; }
-
-    .esec  { margin-bottom: 44px; }
-    .estitle {
-      font-family: 'Playfair Display', serif; font-size: 1.35rem; font-weight: 700;
-      border-bottom: 2px solid var(--ink); padding-bottom: 9px; margin-bottom: 20px;
-      display: flex; align-items: baseline; justify-content: space-between;
+    .btn-topbar-icon:hover { border-color:var(--ink); color:var(--ink); }
+    .btn-topbar-text {
+      height:34px; padding:0 12px; flex-shrink:0;
+      background:var(--paper-dark); border:1.5px solid var(--ink-faint);
+      cursor:pointer; display:flex; align-items:center; gap:5px;
+      font-family:'Courier Prime',monospace; font-size:0.7rem;
+      text-transform:uppercase; letter-spacing:1px; color:var(--ink-mid); white-space:nowrap;
     }
-    .escount { font-family: 'Courier Prime', monospace; font-size: 0.68rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 1px; }
-    .esub { font-family: 'Courier Prime', monospace; font-size: 0.67rem; text-transform: uppercase; letter-spacing: 2px; color: var(--red); margin: 18px 0 10px; }
+    .btn-topbar-text:hover { border-color:var(--ink); color:var(--ink); }
+    .btn-topbar-text.active { background:var(--ink); color:var(--paper); border-color:var(--ink); }
+
+    .ebody { max-width:800px; margin:0 auto; padding:36px 24px 140px; }
+    .esec  { margin-bottom:44px; }
+    .estitle { font-family:'Playfair Display',serif; font-size:1.35rem; font-weight:700; border-bottom:2px solid var(--ink); padding-bottom:9px; margin-bottom:20px; display:flex; align-items:baseline; justify-content:space-between; }
+    .escount { font-family:'Courier Prime',monospace; font-size:0.68rem; color:var(--ink-faint); text-transform:uppercase; letter-spacing:1px; }
+    .esub { font-family:'Courier Prime',monospace; font-size:0.67rem; text-transform:uppercase; letter-spacing:2px; color:var(--red); margin:18px 0 10px; }
 
     /* ── Character panel ── */
-    .cpanel { background: var(--paper); border: 1px solid var(--paper-dark); margin-bottom: 18px; box-shadow: 3px 4px 0 var(--shadow); }
-    .cheader { display: flex; align-items: center; gap: 10px; padding: 13px 16px; border-bottom: 1px solid var(--paper-line); cursor: pointer; user-select: none; }
-    .clabel  { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 600; flex: 1; pointer-events: none; }
-
-    .gblocK { display: flex; align-items: center; gap: 6px; font-family: 'Courier Prime', monospace; font-size: 0.7rem; color: var(--ink-faint); }
-    .glbl { transition: color 0.14s; }
-    .glbl.on { color: var(--red); font-weight: bold; }
-
-    .gtog { position: relative; display: inline-block; width: 42px; height: 20px; }
-    .gtog input { opacity: 0; width: 0; height: 0; }
-    .gslider { position: absolute; inset: 0; cursor: pointer; background: var(--paper-dark); border: 1.5px solid var(--ink-faint); transition: 0.18s; }
-    .gslider::before { content: ''; position: absolute; height: 12px; width: 12px; left: 2px; bottom: 2px; background: var(--ink-faint); transition: 0.18s; }
-    .gtog input:checked + .gslider { border-color: var(--red); }
-    .gtog input:checked + .gslider::before { transform: translateX(22px); background: var(--red); }
-
-    .ciconbtn { background: none; border: none; cursor: pointer; font-size: 0.85rem; color: var(--ink-faint); padding: 2px 5px; line-height: 1; }
-    .ciconbtn:hover { color: var(--red); }
-
-    .cbody { padding: 18px 18px 12px; }
+    .cpanel { background:var(--paper); border:1px solid var(--paper-dark); margin-bottom:18px; box-shadow:3px 4px 0 var(--shadow); }
+    .cheader { display:flex; align-items:center; gap:10px; padding:13px 16px; cursor:pointer; user-select:none; }
+    .clabel  { font-family:'Playfair Display',serif; font-size:1rem; font-weight:600; flex:1; pointer-events:none; }
+    .gblocK { display:flex; align-items:center; gap:6px; font-family:'Courier Prime',monospace; font-size:0.7rem; color:var(--ink-faint); }
+    .glbl { }
+    .glbl.on { color:var(--red); font-weight:bold; }
+    .gtog { position:relative; display:inline-block; width:42px; height:20px; }
+    .gtog input { opacity:0; width:0; height:0; }
+    .gslider { position:absolute; inset:0; cursor:pointer; background:var(--paper-dark); border:1.5px solid var(--ink-faint); }
+    .gslider::before { content:''; position:absolute; height:12px; width:12px; left:2px; bottom:2px; background:var(--ink-faint); }
+    .gtog input:checked + .gslider { border-color:var(--red); }
+    .gtog input:checked + .gslider::before { transform:translateX(22px); background:var(--red); }
+    .ciconbtn { background:none; border:none; cursor:pointer; font-size:0.85rem; color:var(--ink-faint); padding:2px 5px; line-height:1; }
+    .ciconbtn:hover { color:var(--red); }
+    .cbody { padding:18px 18px 12px; }
 
     /* ── Fields ── */
-    .frow { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 14px 18px; margin-bottom: 14px; }
-    .ffd  { display: flex; flex-direction: column; gap: 4px; }
-    .flbl { font-family: 'Courier Prime', monospace; font-size: 0.66rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--ink-faint); }
-    .finp { font-family: 'Lora', serif; font-size: 0.9rem; background: none; border: none; border-bottom: 1px solid var(--paper-line); outline: none; padding: 5px 0; color: var(--ink); }
-    .finp:focus { border-bottom-color: var(--ink-mid); }
-    .finp::placeholder { color: var(--ink-faint); font-style: italic; }
-    .fta  { font-family: 'Lora', serif; font-size: 0.87rem; background: none; border: 1px solid var(--paper-line); outline: none; padding: 9px 10px; color: var(--ink); resize: vertical; min-height: 70px; width: 100%; line-height: 1.65; }
-    .fta:focus { border-color: var(--ink-mid); }
-    .fta::placeholder { color: var(--ink-faint); font-style: italic; }
+    .frow { display:grid; grid-template-columns:repeat(auto-fill,minmax(155px,1fr)); gap:14px 18px; margin-bottom:14px; }
+    .ffd  { display:flex; flex-direction:column; gap:4px; }
+    .flbl { font-family:'Courier Prime',monospace; font-size:0.66rem; text-transform:uppercase; letter-spacing:1.5px; color:var(--ink-faint); }
+    .finp { font-family:'Lora',serif; font-size:0.9rem; background:none; border:none; border-bottom:1px solid var(--paper-line); outline:none; padding:5px 0; color:var(--ink); }
+    .finp:focus { border-bottom-color:var(--ink-mid); }
+    .finp::placeholder { color:var(--ink-faint); font-style:italic; }
+    .fta  { font-family:'Lora',serif; font-size:0.87rem; background:none; border:1px solid var(--paper-line); outline:none; padding:9px 10px; color:var(--ink); resize:vertical; min-height:70px; width:100%; line-height:1.65; }
+    .fta:focus { border-color:var(--ink-mid); }
+    .fta::placeholder { color:var(--ink-faint); font-style:italic; }
 
     /* ── Personality ── */
-    .tsel { font-family: 'Courier Prime', monospace; font-size: 0.68rem; color: var(--red); letter-spacing: 0.5px; margin-bottom: 8px; min-height: 18px; }
-    .tgrid { display: flex; flex-wrap: wrap; gap: 5px; }
-    .tchip { font-family: 'Courier Prime', monospace; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.3px; padding: 4px 8px; border: 1px solid var(--paper-line); cursor: pointer; background: none; color: var(--ink-mid); user-select: none; }
-    .tchip:hover { border-color: var(--ink-mid); color: var(--ink); }
-    .tchip.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-    .tchip.on:hover { background: var(--red); border-color: var(--red); }
+    .tsel { font-family:'Courier Prime',monospace; font-size:0.68rem; color:var(--red); letter-spacing:0.5px; margin-bottom:8px; min-height:18px; }
+    .tgrid { display:flex; flex-wrap:wrap; gap:5px; }
+    .tchip { font-family:'Courier Prime',monospace; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.3px; padding:4px 8px; border:1px solid var(--paper-line); cursor:pointer; background:none; color:var(--ink-mid); user-select:none; }
+    .tchip:hover { border-color:var(--ink-mid); color:var(--ink); }
+    .tchip.on { background:var(--ink); color:var(--paper); border-color:var(--ink); }
+    .tchip.on:hover { background:var(--red); border-color:var(--red); }
 
     /* ── Backstory ── */
-    .bslist { display: flex; flex-direction: column; gap: 5px; }
-    .bsitem { display: flex; align-items: flex-start; gap: 7px; padding: 7px 9px; background: var(--paper-dark); border: 1px solid transparent; }
-    .bsitem.dragov { border-top: 2px solid var(--red); }
-    .bsdrag { cursor: grab; color: var(--ink-faint); font-size: 1rem; padding-top: 2px; user-select: none; flex-shrink: 0; line-height: 1; }
-    .bsdrag:active { cursor: grabbing; }
-    .bsta  { flex: 1; font-family: 'Lora', serif; font-size: 0.86rem; background: none; border: none; outline: none; color: var(--ink); resize: none; min-height: 34px; line-height: 1.55; }
-    .bsta::placeholder { color: var(--ink-faint); font-style: italic; }
-    .bsrm  { background: none; border: none; cursor: pointer; color: var(--ink-faint); font-size: 0.75rem; flex-shrink: 0; padding: 2px; }
-    .bsrm:hover { color: var(--red); }
-    .gadd  { font-family: 'Courier Prime', monospace; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; background: none; border: 1px dashed var(--ink-faint); color: var(--ink-faint); padding: 7px 14px; cursor: pointer; margin-top: 7px; display: inline-block; }
-    .gadd:hover { border-color: var(--ink); color: var(--ink); }
-    .addchar { width: 100%; font-family: 'Courier Prime', monospace; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1.5px; background: none; border: 2px dashed var(--ink-faint); color: var(--ink-faint); padding: 15px; cursor: pointer; margin-bottom: 30px; }
-    .addchar:hover { border-color: var(--ink); color: var(--ink); }
+    .bslist { display:flex; flex-direction:column; gap:5px; }
+    .bsitem { display:flex; align-items:flex-start; gap:7px; padding:7px 9px; background:var(--paper-dark); border:1px solid transparent; }
+    .bsitem.dragov { border-top:2px solid var(--red); }
+    .bsdrag { cursor:grab; color:var(--ink-faint); font-size:1rem; padding-top:2px; user-select:none; flex-shrink:0; line-height:1; }
+    .bsdrag:active { cursor:grabbing; }
+    .bsta  { flex:1; font-family:'Lora',serif; font-size:0.86rem; background:none; border:none; outline:none; color:var(--ink); resize:none; min-height:34px; line-height:1.55; }
+    .bsta::placeholder { color:var(--ink-faint); font-style:italic; }
+    .bsrm  { background:none; border:none; cursor:pointer; color:var(--ink-faint); font-size:0.75rem; flex-shrink:0; padding:2px; }
+    .bsrm:hover { color:var(--red); }
+    .gadd  { font-family:'Courier Prime',monospace; font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; background:none; border:1px dashed var(--ink-faint); color:var(--ink-faint); padding:7px 14px; cursor:pointer; margin-top:7px; display:inline-block; }
+    .gadd:hover { border-color:var(--ink); color:var(--ink); }
+    .addchar { width:100%; font-family:'Courier Prime',monospace; font-size:0.78rem; text-transform:uppercase; letter-spacing:1.5px; background:none; border:2px dashed var(--ink-faint); color:var(--ink-faint); padding:15px; cursor:pointer; margin-bottom:30px; }
+    .addchar:hover { border-color:var(--ink); color:var(--ink); }
 
-    /* ══════════════════════════════════
-       SCENARIO — high contrast wrapper
-    ══════════════════════════════════ */
-    .sc-wrap {
-      background: var(--sc-bg);
-      border: 1.5px solid var(--sc-border);
-      border-left: 4px solid var(--red);
-      padding: 22px 20px 18px;
-    }
-    .sc-wrap .finp { border-bottom-color: var(--sc-border); }
-    .sc-wrap .finp:focus { border-bottom-color: var(--red); }
-    .sc-wrap .fta  { border-color: var(--sc-border); background: var(--paper); }
-    .sc-wrap .fta:focus { border-color: var(--red); }
-
-    .scgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-    @media (max-width: 520px) { .scgrid { grid-template-columns: 1fr; } }
-    .scf    { display: flex; flex-direction: column; gap: 5px; }
-    .scf.sp { grid-column: 1 / -1; }
-    .scsub  {
-      grid-column: 1 / -1;
-      font-family: 'Courier Prime', monospace; font-size: 0.65rem;
-      text-transform: uppercase; letter-spacing: 2px; color: var(--red);
-      padding-top: 8px; border-top: 1px dashed var(--sc-border); margin-top: 6px;
-    }
+    /* ── Scenario ── */
+    .sc-wrap { background:var(--sc-bg); border:1.5px solid var(--sc-border); border-left:4px solid var(--red); padding:22px 20px 18px; }
+    .sc-wrap .finp { border-bottom-color:var(--sc-border); }
+    .sc-wrap .finp:focus { border-bottom-color:var(--red); }
+    .sc-wrap .fta  { border-color:var(--sc-border); background:var(--paper); }
+    .sc-wrap .fta:focus { border-color:var(--red); }
+    .scgrid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+    @media (max-width:520px) { .scgrid { grid-template-columns:1fr; } }
+    .scf    { display:flex; flex-direction:column; gap:5px; }
+    .scf.sp { grid-column:1/-1; }
+    .scsub  { grid-column:1/-1; font-family:'Courier Prime',monospace; font-size:0.65rem; text-transform:uppercase; letter-spacing:2px; color:var(--red); padding-top:8px; border-top:1px dashed var(--sc-border); margin-top:6px; }
 
     /* ── Rules ── */
-    .rlist { display: flex; flex-direction: column; gap: 4px; }
-    .rrow  { display: flex; gap: 8px; align-items: flex-start; padding: 7px 0; border-bottom: 1px dashed var(--paper-line); }
-    .rnum  { font-family: 'Courier Prime', monospace; font-size: 0.73rem; color: var(--red); flex-shrink: 0; min-width: 22px; padding-top: 2px; }
-    .rinp  { flex: 1; font-family: 'Lora', serif; font-size: 0.84rem; background: none; border: none; outline: none; color: var(--ink); resize: none; line-height: 1.55; }
-    .rrm   { background: none; border: none; cursor: pointer; color: var(--ink-faint); font-size: 0.72rem; flex-shrink: 0; }
-    .rrm:hover { color: var(--red); }
+    .rlist { display:flex; flex-direction:column; gap:4px; }
+    .rrow  { display:flex; gap:8px; align-items:flex-start; padding:7px 0; border-bottom:1px dashed var(--paper-line); }
+    .rnum  { font-family:'Courier Prime',monospace; font-size:0.73rem; color:var(--red); flex-shrink:0; min-width:22px; padding-top:2px; }
+    .rinp  { flex:1; font-family:'Lora',serif; font-size:0.84rem; background:none; border:none; outline:none; color:var(--ink); resize:none; line-height:1.55; }
+    .rrm   { background:none; border:none; cursor:pointer; color:var(--ink-faint); font-size:0.72rem; flex-shrink:0; }
+    .rrm:hover { color:var(--red); }
 
-    @media (max-width: 600px) {
-      .fab-cluster { bottom: 18px; right: 14px; }
-      .fab-copy { padding: 12px 18px; font-size: 0.8rem; }
+    /* ════════════════════════════════
+       LEFT PANEL — API Settings
+    ════════════════════════════════ */
+    .panel-backdrop {
+      position:fixed; inset:0; z-index:499;
+      background:rgba(0,0,0,0);
+      pointer-events:none;
+    }
+    .panel-backdrop.visible {
+      background:rgba(0,0,0,0.28);
+      pointer-events:all;
+    }
+    .left-panel {
+      position:fixed; top:0; left:0; height:100vh; width:330px;
+      background:var(--panel-bg); border-right:2px solid var(--paper-line);
+      z-index:500; display:flex; flex-direction:column;
+      transform:translateX(-100%);
+      box-shadow:4px 0 24px var(--shadow);
+      transition: transform 0.32s cubic-bezier(0.4,0,0.2,1), background-color 0.4s ease, border-color 0.4s ease;
+    }
+    .left-panel.open { transform:translateX(0); }
+
+    .lp-head {
+      background:var(--ink); color:var(--paper);
+      padding:15px 18px; display:flex; align-items:center; justify-content:space-between;
+      flex-shrink:0; border-bottom:1px solid var(--paper-line);
+    }
+    .lp-head h2 { font-family:'Playfair Display',serif; font-size:1.05rem; font-weight:700; }
+    .lp-x { background:none; border:none; color:var(--paper); cursor:pointer; font-size:1rem; padding:3px 6px; line-height:1; }
+    .lp-x:hover { color:#f0b8c8; }
+    .lp-body { flex:1; overflow-y:auto; padding:18px; display:flex; flex-direction:column; gap:16px; }
+
+    .lp-sec { display:flex; flex-direction:column; gap:8px; }
+    .lp-lbl { font-family:'Courier Prime',monospace; font-size:0.62rem; text-transform:uppercase; letter-spacing:2px; color:var(--red); }
+    .lp-inp {
+      font-family:'Courier Prime',monospace; font-size:0.82rem;
+      background:var(--paper); border:1px solid var(--paper-line);
+      color:var(--ink); padding:8px 10px; outline:none; width:100%;
+    }
+    .lp-inp:focus { border-color:var(--ink-mid); }
+    .lp-inp::placeholder { color:var(--ink-faint); }
+    .lp-hr { border:none; border-top:1px dashed var(--paper-line); }
+    .lp-hint { font-family:'Courier Prime',monospace; font-size:0.61rem; color:var(--ink-faint); line-height:1.6; }
+
+    .lp-row { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .lp-btn {
+      font-family:'Courier Prime',monospace; font-size:0.65rem; text-transform:uppercase;
+      letter-spacing:1px; background:var(--ink); color:var(--paper);
+      border:none; padding:7px 12px; cursor:pointer; white-space:nowrap; flex-shrink:0;
+    }
+    .lp-btn:hover { background:var(--red); }
+    .lp-btn:disabled { opacity:0.45; cursor:default; }
+
+    .model-list { display:flex; flex-direction:column; gap:3px; max-height:300px; overflow-y:auto; }
+    .model-item {
+      padding:8px 10px; background:var(--paper); border:1px solid var(--paper-line);
+      cursor:pointer; display:flex; flex-direction:column; gap:2px;
+    }
+    .model-item:hover { border-color:var(--ink-mid); }
+    .model-item.sel { border-color:var(--red); background:var(--sc-bg); }
+    .model-n { font-family:'Courier Prime',monospace; font-size:0.73rem; color:var(--ink); word-break:break-all; }
+    .model-p { font-family:'Courier Prime',monospace; font-size:0.62rem; color:var(--ink-faint); }
+    .model-note { font-family:'Courier Prime',monospace; font-size:0.68rem; color:var(--ink-faint); text-align:center; padding:14px 8px; }
+
+    .sel-pill {
+      font-family:'Courier Prime',monospace; font-size:0.7rem;
+      color:var(--red); padding:5px 0; word-break:break-all; line-height:1.5;
+    }
+
+    /* ════════════════════════════════
+       RIGHT PANEL — Chat
+    ════════════════════════════════ */
+    .right-panel {
+      position:fixed; top:0; right:0; height:100vh; width:370px;
+      background:var(--panel-bg); border-left:2px solid var(--paper-line);
+      z-index:500; display:flex; flex-direction:column;
+      transform:translateX(100%);
+      box-shadow:-4px 0 24px var(--shadow);
+      transition: transform 0.32s cubic-bezier(0.4,0,0.2,1), background-color 0.4s ease, border-color 0.4s ease;
+    }
+    .right-panel.open { transform:translateX(0); }
+
+    .rp-head {
+      background:var(--ink); color:var(--paper);
+      padding:12px 16px; display:flex; align-items:center; gap:10px;
+      flex-shrink:0; border-bottom:1px solid var(--paper-line);
+    }
+    .rp-head h2 { font-family:'Playfair Display',serif; font-size:0.98rem; font-weight:700; flex:1; }
+    .rp-badge {
+      font-family:'Courier Prime',monospace; font-size:0.58rem; text-transform:uppercase;
+      letter-spacing:1px; padding:3px 7px; border:1px solid; white-space:nowrap; flex-shrink:0;
+    }
+    .rp-badge.on  { color:var(--red); border-color:var(--red); }
+    .rp-badge.off { color:var(--ink-faint); border-color:var(--ink-faint); }
+    .rp-x { background:none; border:none; color:var(--paper); cursor:pointer; font-size:1rem; padding:3px 6px; line-height:1; flex-shrink:0; }
+    .rp-x:hover { color:#f0b8c8; }
+
+    .chat-msgs { flex:1; overflow-y:auto; padding:12px 12px 6px; display:flex; flex-direction:column; gap:10px; }
+    .chat-empty { margin:auto; text-align:center; padding:30px 16px; }
+    .chat-empty-t { font-family:'Playfair Display',serif; font-size:1rem; font-style:italic; color:var(--ink-faint); margin-bottom:8px; }
+    .chat-empty-s { font-family:'Courier Prime',monospace; font-size:0.62rem; text-transform:uppercase; letter-spacing:1px; color:var(--ink-faint); line-height:1.7; }
+
+    .chat-msg { display:flex; flex-direction:column; gap:2px; max-width:90%; }
+    .chat-msg.user { align-self:flex-end; }
+    .chat-msg.assistant { align-self:flex-start; }
+    .chat-role-lbl { font-family:'Courier Prime',monospace; font-size:0.58rem; text-transform:uppercase; letter-spacing:1px; color:var(--ink-faint); padding:0 2px; }
+    .chat-bubble { padding:9px 12px; font-family:'Lora',serif; font-size:0.82rem; line-height:1.6; border:1px solid var(--paper-line); word-break:break-word; white-space:pre-wrap; }
+    .chat-msg.user      .chat-bubble { background:var(--chat-user); }
+    .chat-msg.assistant .chat-bubble { background:var(--chat-ai); border-left:3px solid var(--red); }
+    .chat-thinking { font-family:'Courier Prime',monospace; font-size:0.7rem; color:var(--ink-faint); font-style:italic; align-self:flex-start; padding:4px 2px; }
+
+    .chat-foot { padding:10px 12px; border-top:1px solid var(--paper-line); display:flex; flex-direction:column; gap:7px; flex-shrink:0; }
+    .chat-model-row { display:flex; align-items:center; justify-content:space-between; }
+    .chat-model-lbl { font-family:'Courier Prime',monospace; font-size:0.62rem; color:var(--ink-faint); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:200px; }
+    .chat-model-lbl span { color:var(--red); }
+    .chat-clear-btn { font-family:'Courier Prime',monospace; font-size:0.61rem; text-transform:uppercase; letter-spacing:1px; background:none; border:none; color:var(--ink-faint); cursor:pointer; padding:0; flex-shrink:0; }
+    .chat-clear-btn:hover { color:var(--red); }
+    .chat-input-row { display:flex; gap:7px; align-items:flex-end; }
+    .chat-ta { flex:1; font-family:'Lora',serif; font-size:0.84rem; background:var(--paper); border:1px solid var(--paper-line); color:var(--ink); padding:8px 10px; outline:none; resize:none; min-height:56px; max-height:130px; line-height:1.5; }
+    .chat-ta:focus { border-color:var(--ink-mid); }
+    .chat-ta::placeholder { color:var(--ink-faint); font-style:italic; }
+    .chat-send { background:var(--red); color:var(--paper); border:none; cursor:pointer; padding:10px 13px; font-size:1rem; align-self:flex-end; flex-shrink:0; }
+    .chat-send:hover { background:var(--ink); }
+    .chat-send:disabled { opacity:0.38; cursor:default; }
+
+    .no-api-msg { flex:1; display:flex; align-items:center; justify-content:center; padding:24px; }
+    .no-api-msg p { font-family:'Courier Prime',monospace; font-size:0.7rem; color:var(--ink-faint); text-align:center; line-height:1.8; text-transform:uppercase; letter-spacing:1px; }
+
+    @media (max-width:640px) {
+      .left-panel  { width:100vw; }
+      .right-panel { width:100vw; }
+      .fab-cluster { bottom:18px; right:14px; }
+      .fab-copy { padding:12px 18px; font-size:0.8rem; }
     }
   </style>
 </head>
 <body>
 <div id="root"></div>
-
 <script type="text/babel">
 const { useState, useEffect, useRef, useCallback } = React;
 
-/* ═══════════════ CONSTANTS ═══════════════ */
-
+/* ═══ CONSTANTS ═══ */
 const TROPES = [
   "Cold","Warm","Submissive","Dominant","Gentle","Nurturing","Apathetic",
   "Tsundere","Kuudere","Yandere","Dandere","Deredere","Protective","Possessive",
@@ -385,7 +417,6 @@ const TROPES = [
   "Elegant","Tomboyish","Brooding","Eccentric","Disciplined","Free-spirited",
   "Mellow","Sharp-tongued","Wistful","Fervent"
 ];
-
 const DEFAULT_RULES = [
   "{{char}} will NEVER talk nor act as {{user}} under any circumstances whatsoever.",
   "{{char}} will ALWAYS stay true to their/his/her personality.",
@@ -400,181 +431,387 @@ const DEFAULT_RULES = [
   "Characters avoid being overly familiar or sexually pushy towards {{user}} unless the situation calls for it, it is in character for them to do so, or they have a sexual relationship.",
   "{{char}} will ALWAYS reply in over 500 tokens."
 ];
+const CHUTES_BASE = "https://llm.chutes.ai/v1";
 
-/* ═══════════════ HELPERS ═══════════════ */
-
-const uid     = () => Math.random().toString(36).slice(2, 10);
-const fmtDate = (iso) => new Date(iso).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
-
+/* ═══ HELPERS ═══ */
+const uid     = () => Math.random().toString(36).slice(2,10);
+const fmtDate = iso => new Date(iso).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
 const newChar = () => ({
-  id: uid(), name:"", age:"", height:"",
+  id:uid(), name:"", age:"", height:"",
   physicalAppearances:"", gender:"female",
   personality:[], motivation:"",
-  backstory:[{id:uid(), text:""}],
+  backstory:[{id:uid(),text:""}],
   intimacyDetails:"", dynamic:""
 });
-
 const newBot = () => ({
   id:uid(), title:"", createdAt:new Date().toISOString(),
   characters:[newChar()],
-  scenario:{ setting:"", timePeriod:"", overallTone:"", premise:"", importantSupportingCharacters:"", startingSituation:"" },
+  scenario:{setting:"",timePeriod:"",overallTone:"",premise:"",importantSupportingCharacters:"",startingSituation:""},
   rules:[...DEFAULT_RULES]
 });
 
-/* ═══════════════ STORAGE ═══════════════ */
+/* ═══ STORAGE ═══ */
+const loadBots     = () => { try{return JSON.parse(localStorage.getItem("cs_bots")||"[]")}catch{return[]} };
+const saveBots     = b  => localStorage.setItem("cs_bots", JSON.stringify(b));
+const loadTheme    = () => localStorage.getItem("cs_theme")==="dark";
+const loadSettings = () => { try{return JSON.parse(localStorage.getItem("cs_settings")||"{}")}catch{return{}} };
+const saveSettings = s  => localStorage.setItem("cs_settings", JSON.stringify(s));
+const loadChats    = () => { try{return JSON.parse(localStorage.getItem("cs_chats")||"{}")}catch{return{}} };
+const saveChats    = c  => localStorage.setItem("cs_chats", JSON.stringify(c));
 
-const loadBots  = () => { try { return JSON.parse(localStorage.getItem("cs_bots")||"[]"); } catch { return []; } };
-const saveBots  = (b) => localStorage.setItem("cs_bots", JSON.stringify(b));
-const loadTheme = () => localStorage.getItem("cs_theme") === "dark";
-
-/* ═══════════════ COPY FORMATTER ═══════════════ */
-/* Precisely follows the docx template structure  */
-
+/* ═══ COPY FORMATTER ═══ */
 function formatDocx(bot) {
   let s = "";
-  bot.characters.forEach((c, i) => {
-    s += `# Character ${i + 1}\n\n`;
+  bot.characters.forEach((c,i) => {
+    s += `# Character ${i+1}\n\n`;
     s += `> Basic Information\n\n`;
     s += `Name: ${c.name}\n\n`;
+    s += `Gender: ${c.gender}\n\n`;
     s += `Age: ${c.age}\n\n`;
     s += `Height: ${c.height}\n\n`;
     s += `Physical Appearances: ${c.physicalAppearances}\n\n`;
     s += `Personality: ${c.personality.join(", ")}\n\n`;
-    s += `Motivation: ${c.motivation || ""}\n\n`;
+    s += `Motivation: ${c.motivation||""}\n\n`;
     s += `> Backstory\n\n`;
-    c.backstory.forEach(e => { if (e.text.trim()) s += `• ${e.text.trim()}\n\n`; });
+    c.backstory.forEach(e=>{ if(e.text.trim()) s+=`• ${e.text.trim()}\n\n`; });
     s += `> Intimacy Details\n\n`;
-    s += `${c.intimacyDetails || ""}\n\n`;
+    s += `${c.intimacyDetails||""}\n\n`;
   });
   s += `\n> Scenario\n\n`;
   s += `Setting: ${bot.scenario.setting}\n\n`;
   s += `Time Period: ${bot.scenario.timePeriod}\n\n`;
   s += `Overall Tone: ${bot.scenario.overallTone}\n\n`;
   s += `Premise: ${bot.scenario.premise}\n\n`;
-  bot.characters.forEach((c, i) => {
-    const lbl = c.name ? c.name : `Character ${i + 1}`;
-    s += `${lbl} and {{user}} Dynamic: ${c.dynamic || ""}\n\n`;
+  bot.characters.forEach((c,i)=>{
+    const lbl = c.name||`Character ${i+1}`;
+    s += `${lbl} and {{user}} Dynamic: ${c.dynamic||""}\n\n`;
   });
   s += `Important Supporting Characters: ${bot.scenario.importantSupportingCharacters}\n\n`;
   s += `Starting Situation (in intro message 1): ${bot.scenario.startingSituation}\n\n`;
   s += `\n> Rules\n\n`;
-  bot.rules.forEach(r => { s += `• ${r}\n\n`; });
+  bot.rules.forEach(r=>{ s+=`• ${r}\n\n`; });
   return s;
 }
 
-/* ═══════════════ 3-D FLIP HOOK ═══════════════ */
+/* ═══ SYSTEM PROMPT ═══ */
+function buildSystemPrompt(bot) {
+  if (!bot) return "You are a helpful creative writing assistant.";
+  return `You are a creative writing assistant helping the user build and refine characters and scenarios for a roleplay chatbot.
 
-function useThemeFlip() {
-  const [dark, setDark] = useState(loadTheme);
-  const [busy, setBusy] = useState(false);
-  const ref = useRef(null);
+Current character & scenario data:
 
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", dark);
-    localStorage.setItem("cs_theme", dark ? "dark" : "light");
-  }, [dark]);
+${formatDocx(bot)}
 
-  const flip = useCallback(() => {
-    if (busy || !ref.current) return;
-    setBusy(true);
-    const el = ref.current;
-    const DUR = 360;
-
-    // Phase 1 — rotate to edge (90°)
-    el.style.transition = `transform ${DUR}ms cubic-bezier(0.4,0,0.6,1)`;
-    el.style.transform  = "rotateY(90deg)";
-
-    setTimeout(() => {
-      // Phase 2 — swap theme, jump to -90° instantly
-      setDark(d => !d);
-      el.style.transition = "none";
-      el.style.transform  = "rotateY(-90deg)";
-
-      // Phase 3 — animate back to 0°
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        el.style.transition = `transform ${DUR}ms cubic-bezier(0.4,0,0.6,1)`;
-        el.style.transform  = "rotateY(0deg)";
-        setTimeout(() => {
-          el.style.transition = "";
-          el.style.transform  = "";
-          setBusy(false);
-        }, DUR + 20);
-      }));
-    }, DUR + 10);
-  }, [busy]);
-
-  return { dark, flip, ref };
+Use this context to help develop characters, refine backstory, suggest personality traits, advise on dialogue style, improve the scenario, or answer any creative writing question. When the user says "the character" or "them", refer to the characters above. Be specific, imaginative, and helpful.`;
 }
 
-/* ═══════════════ APP ═══════════════ */
+/* ═══ THEME HOOK ═══ */
+function useTheme() {
+  const [dark, setDark] = useState(loadTheme);
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", dark);
+    localStorage.setItem("cs_theme", dark?"dark":"light");
+  }, [dark]);
+  return { dark, toggle: useCallback(()=>setDark(d=>!d),[]) };
+}
 
+/* ═══════════════════════════════
+   APP
+═══════════════════════════════ */
 function App() {
-  const [bots, setBots]             = useState(loadBots);
-  const [view, setView]             = useState("dash");
-  const [editBot, setEditBot]       = useState(null);
-  const [previewBot, setPreviewBot] = useState(null);
-  const [copyOk, setCopyOk]         = useState(false);
-  const { dark, flip, ref }         = useThemeFlip();
+  const [bots,setBots]               = useState(loadBots);
+  const [view,setView]               = useState("dash");
+  const [editBot,setEditBot]         = useState(null);
+  const [previewBot,setPreviewBot]   = useState(null);
+  const [copyOk,setCopyOk]           = useState(false);
+  const [leftOpen,setLeftOpen]       = useState(false);
+  const [rightOpen,setRightOpen]     = useState(false);
+  const [settings,setSettings]       = useState(loadSettings);
+  const [models,setModels]           = useState([]);
+  const [modLoading,setModLoading]   = useState(false);
+  const [modError,setModError]       = useState("");
+  const [chats,setChats]             = useState(loadChats);
+  const { dark, toggle }             = useTheme();
+  const liveDraftRef                 = useRef(null);
 
-  useEffect(() => saveBots(bots), [bots]);
+  useEffect(()=>saveBots(bots),[bots]);
+  useEffect(()=>saveSettings(settings),[settings]);
+  useEffect(()=>saveChats(chats),[chats]);
 
-  const goNew  = () => { setEditBot(newBot());                                        setView("editor"); };
-  const goEdit = (b) => { setPreviewBot(null); setEditBot(JSON.parse(JSON.stringify(b))); setView("editor"); };
-  const goBack = () => { setView("dash"); setEditBot(null); };
+  /* fetch Chutes model list */
+  const fetchModels = useCallback(async (key) => {
+    if (!key) return;
+    setModLoading(true); setModError("");
+    try {
+      const r = await fetch(`${CHUTES_BASE}/models`, { headers:{Authorization:`Bearer ${key}`} });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const d = await r.json();
+      const raw = d.data || d.models || (Array.isArray(d)?d:[]);
+      setModels(raw.map(m=>({
+        id: m.id||m.name,
+        pricing: m.pricing||null
+      })));
+    } catch(e) {
+      setModError("Failed: "+e.message);
+    } finally { setModLoading(false); }
+  },[]);
 
-  const handleSave   = (b) => { setBots(p => { const i=p.findIndex(x=>x.id===b.id); if(i>=0){const n=[...p];n[i]=b;return n;} return [...p,b]; }); goBack(); };
-  const handleDelete = (id) => { setBots(p=>p.filter(b=>b.id!==id)); setPreviewBot(null); };
+  useEffect(()=>{ if(settings.apiKey) fetchModels(settings.apiKey); },[settings.apiKey]);
 
-  const liveDraftRef = useRef(null);
+  const goNew  = () => { setEditBot(newBot()); setView("editor"); };
+  const goEdit = b  => { setPreviewBot(null); setEditBot(JSON.parse(JSON.stringify(b))); setView("editor"); };
+  const goBack = () => { setView("dash"); setEditBot(null); liveDraftRef.current=null; setRightOpen(false); };
+
+  const handleSave   = b => { setBots(p=>{const i=p.findIndex(x=>x.id===b.id);if(i>=0){const n=[...p];n[i]=b;return n;}return[...p,b];}); goBack(); };
+  const handleDelete = id=> { setBots(p=>p.filter(b=>b.id!==id)); setPreviewBot(null); };
 
   const handleCopy = () => {
     const data = liveDraftRef.current || editBot;
     if (!data) return;
-    navigator.clipboard.writeText(formatDocx(data)).then(() => {
-      setCopyOk(true);
-      setTimeout(() => setCopyOk(false), 2200);
-    });
+    navigator.clipboard.writeText(formatDocx(data)).then(()=>{ setCopyOk(true); setTimeout(()=>setCopyOk(false),2200); });
+  };
+
+  /* per-bot chat history */
+  const botId        = editBot?.id;
+  const chatHistory  = botId ? (chats[botId]||[]) : [];
+  const setChatHist  = msgs => { if(!botId)return; setChats(p=>({...p,[botId]:msgs})); };
+  const getDraft     = () => liveDraftRef.current || editBot;
+
+  return (
+    <div>
+      {/* backdrop for panels */}
+      <div
+        className={`panel-backdrop${leftOpen||rightOpen?" visible":""}`}
+        onClick={()=>{ setLeftOpen(false); setRightOpen(false); }}
+      />
+
+      <LeftPanel
+        open={leftOpen} onClose={()=>setLeftOpen(false)}
+        settings={settings} onSettings={setSettings}
+        models={models} modLoading={modLoading} modError={modError}
+        onRefresh={()=>fetchModels(settings.apiKey)}
+      />
+
+      {view==="editor" && (
+        <RightPanel
+          open={rightOpen} onClose={()=>setRightOpen(false)}
+          settings={settings}
+          getDraft={getDraft}
+          chatHistory={chatHistory}
+          setChatHistory={setChatHist}
+        />
+      )}
+
+      {view==="dash"
+        ? <Dashboard bots={bots} onNew={goNew} onPreview={setPreviewBot}
+            dark={dark} onToggle={toggle} onSettings={()=>setLeftOpen(true)} />
+        : <BotEditor
+            bot={editBot} onSave={handleSave} onBack={goBack}
+            onDraftChange={d=>{liveDraftRef.current=d;}}
+            dark={dark} onToggle={toggle}
+            onSettings={()=>setLeftOpen(true)}
+            onChat={()=>setRightOpen(o=>!o)} chatOpen={rightOpen}
+          />
+      }
+
+      {previewBot && (
+        <PreviewModal bot={previewBot}
+          onClose={()=>setPreviewBot(null)}
+          onEdit={()=>goEdit(previewBot)}
+          onDelete={handleDelete}
+        />
+      )}
+
+      {view==="editor" && (
+        <div className="fab-cluster">
+          <button className={`fab-copy${copyOk?" ok":""}`} onClick={handleCopy}>
+            <span className="fab-copy-icon">{copyOk?"✓":"⎘"}</span>
+            {copyOk?"Copied!":"Copy All"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════
+   LEFT PANEL
+═══════════════════════════════ */
+function LeftPanel({ open, onClose, settings, onSettings, models, modLoading, modError, onRefresh }) {
+  const set = (k,v) => onSettings(s=>({...s,[k]:v}));
+
+  const fmtPrice = pricing => {
+    if (!pricing) return null;
+    const i = pricing.prompt ?? pricing.input ?? pricing.per_input_token;
+    const o = pricing.completion ?? pricing.output ?? pricing.per_output_token;
+    if (i==null && o==null) return null;
+    const f = n => n!=null ? `$${(parseFloat(n)*1e6).toFixed(3)}/M` : "?";
+    return `↑ ${f(i)}  ↓ ${f(o)}`;
   };
 
   return (
-    <div className="flip-outer">
-      <div className="flip-inner" ref={ref}>
+    <div className={`left-panel${open?" open":""}`} onClick={e=>e.stopPropagation()}>
+      <div className="lp-head">
+        <h2>⚙ API Settings</h2>
+        <button className="lp-x" onClick={onClose}>✕</button>
+      </div>
+      <div className="lp-body">
 
-        {view === "dash"
-          ? <Dashboard bots={bots} onNew={goNew} onPreview={setPreviewBot} />
-          : <BotEditor bot={editBot} onSave={handleSave} onBack={goBack} onDraftChange={d => { liveDraftRef.current = d; }} />
-        }
-
-        {previewBot && (
-          <PreviewModal
-            bot={previewBot}
-            onClose={() => setPreviewBot(null)}
-            onEdit={() => goEdit(previewBot)}
-            onDelete={handleDelete}
-          />
-        )}
-
-        {/* ── FAB cluster ── */}
-        <div className="fab-cluster">
-          {view === "editor" && (
-            <button className={`fab-copy${copyOk ? " ok" : ""}`} onClick={handleCopy}>
-              <span className="fab-copy-icon">{copyOk ? "✓" : "⎘"}</span>
-              {copyOk ? "Copied!" : "Copy All"}
-            </button>
-          )}
-          <button className="fab-theme" onClick={flip} title={dark ? "Light mode" : "Dark mode"}>
-            {dark ? "☀" : "☾"}
-          </button>
+        <div className="lp-sec">
+          <div className="lp-lbl">Chutes API Key</div>
+          <input className="lp-inp" type="password" placeholder="chutes_…"
+            value={settings.apiKey||""} onChange={e=>set("apiKey",e.target.value)} />
+          <div className="lp-hint">Your key is saved only in this browser.<br/>Get one free at chutes.ai</div>
         </div>
+
+        <hr className="lp-hr"/>
+
+        <div className="lp-sec">
+          <div className="lp-row">
+            <div className="lp-lbl">Models</div>
+            <button className="lp-btn" onClick={onRefresh}
+              disabled={!settings.apiKey||modLoading}>
+              {modLoading?"Loading…":"↻ Refresh"}
+            </button>
+          </div>
+          {!settings.apiKey && <div className="model-note">Enter API key above to load models</div>}
+          {modError && <div className="model-note" style={{color:"var(--red)"}}>{modError}</div>}
+          {!modLoading && models.length>0 && (
+            <div className="model-list">
+              {models.map(m=>{
+                const price = fmtPrice(m.pricing);
+                return (
+                  <div key={m.id}
+                    className={`model-item${settings.selectedModel===m.id?" sel":""}`}
+                    onClick={()=>set("selectedModel",m.id)}>
+                    <span className="model-n">{m.id}</span>
+                    {price && <span className="model-p">{price}</span>}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {!modLoading && settings.apiKey && models.length===0 && !modError && (
+            <div className="model-note">No models found — press Refresh</div>
+          )}
+        </div>
+
+        {settings.selectedModel && (
+          <>
+            <hr className="lp-hr"/>
+            <div className="lp-sec">
+              <div className="lp-lbl">Active Model</div>
+              <div className="sel-pill">{settings.selectedModel}</div>
+            </div>
+          </>
+        )}
 
       </div>
     </div>
   );
 }
 
-/* ═══════════════ DASHBOARD ═══════════════ */
+/* ═══════════════════════════════
+   RIGHT PANEL — Chat
+═══════════════════════════════ */
+function RightPanel({ open, onClose, settings, getDraft, chatHistory, setChatHistory }) {
+  const [input,setInput]     = useState("");
+  const [thinking,setThink]  = useState(false);
+  const bottomRef            = useRef(null);
 
-function Dashboard({ bots, onNew, onPreview }) {
+  useEffect(()=>{ if(bottomRef.current) bottomRef.current.scrollIntoView({behavior:"smooth"}); },[chatHistory,thinking]);
+
+  const hasApi = !!(settings.apiKey && settings.selectedModel);
+  const draft  = getDraft();
+  const charNames = draft?.characters?.map(c=>c.name||"Unnamed").join(", ")||"—";
+
+  const send = async () => {
+    const text = input.trim();
+    if (!text||thinking||!hasApi) return;
+    setInput("");
+
+    const sysPmt   = buildSystemPrompt(getDraft());
+    const userMsg  = {role:"user",content:text};
+    const nextHist = [...chatHistory, userMsg];
+    setChatHistory(nextHist);
+    setThink(true);
+
+    try {
+      const res = await fetch(`${CHUTES_BASE}/chat/completions`,{
+        method:"POST",
+        headers:{"Content-Type":"application/json","Authorization":`Bearer ${settings.apiKey}`},
+        body:JSON.stringify({
+          model:settings.selectedModel,
+          messages:[{role:"system",content:sysPmt},...nextHist],
+          max_tokens:1024, stream:false
+        })
+      });
+      if (!res.ok) { const t=await res.text(); throw new Error(`HTTP ${res.status}: ${t}`); }
+      const data = await res.json();
+      const reply = data.choices?.[0]?.message?.content || "(empty response)";
+      setChatHistory([...nextHist,{role:"assistant",content:reply}]);
+    } catch(e) {
+      setChatHistory([...nextHist,{role:"assistant",content:`⚠ Error: ${e.message}`}]);
+    } finally { setThink(false); }
+  };
+
+  const onKey = e => { if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();} };
+  const modelShort = settings.selectedModel?.split("/").pop() || settings.selectedModel || "—";
+
+  return (
+    <div className={`right-panel${open?" open":""}`} onClick={e=>e.stopPropagation()}>
+      <div className="rp-head">
+        <h2>✦ Assistant</h2>
+        <span className={`rp-badge${draft?" on":" off"}`}>{draft?"Memory Live":"No Context"}</span>
+        <button className="rp-x" onClick={onClose}>✕</button>
+      </div>
+
+      {!hasApi ? (
+        <div className="no-api-msg">
+          <p>Open ⚙ Settings,<br/>enter your Chutes API key<br/>and select a model<br/>to use the assistant.</p>
+        </div>
+      ) : (
+        <>
+          <div className="chat-msgs">
+            {chatHistory.length===0 && !thinking && (
+              <div className="chat-empty">
+                <div className="chat-empty-t">Begin the conversation</div>
+                <div className="chat-empty-s">Characters in memory:<br/>{charNames}</div>
+              </div>
+            )}
+            {chatHistory.map((m,i)=>(
+              <div key={i} className={`chat-msg ${m.role}`}>
+                <span className="chat-role-lbl">{m.role==="user"?"You":"Assistant"}</span>
+                <div className="chat-bubble">{m.content}</div>
+              </div>
+            ))}
+            {thinking && <div className="chat-thinking">Thinking…</div>}
+            <div ref={bottomRef}/>
+          </div>
+
+          <div className="chat-foot">
+            <div className="chat-model-row">
+              <span className="chat-model-lbl">Model: <span>{modelShort}</span></span>
+              <button className="chat-clear-btn" onClick={()=>setChatHistory([])}>Clear</button>
+            </div>
+            <div className="chat-input-row">
+              <textarea className="chat-ta" rows={2}
+                placeholder="Ask about your characters…"
+                value={input} onChange={e=>setInput(e.target.value)} onKeyDown={onKey}
+              />
+              <button className="chat-send" onClick={send} disabled={!input.trim()||thinking}>➤</button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════
+   DASHBOARD
+═══════════════════════════════ */
+function Dashboard({ bots, onNew, onPreview, dark, onToggle, onSettings }) {
   return (
     <div className="dashboard">
       <div className="dash-header">
@@ -582,70 +819,63 @@ function Dashboard({ bots, onNew, onPreview }) {
           <div className="dash-title">Character Studio</div>
           <div className="dash-subtitle">Bot Creator &amp; Manager</div>
         </div>
-        <button className="btn-new" onClick={onNew}>＋ New Character</button>
+        <div className="dash-actions">
+          <button className="btn-dash-util" onClick={onSettings}>⚙ Settings</button>
+          <button className="btn-dash-util" onClick={onToggle}>{dark?"☀ Light":"☾ Dark"}</button>
+          <button className="btn-new" onClick={onNew}>＋ New Character</button>
+        </div>
       </div>
       <div className="bots-grid">
-        {bots.length === 0 ? (
+        {bots.length===0 ? (
           <div className="empty-state">
             <div className="empty-title">The pages are blank.</div>
             <div className="empty-hint">Click "New Character" to begin writing.</div>
           </div>
-        ) : bots.map(b => <BotCard key={b.id} bot={b} onPreview={onPreview} />)}
+        ) : bots.map(b=><BotCard key={b.id} bot={b} onPreview={onPreview}/>)}
       </div>
     </div>
   );
 }
 
 function BotCard({ bot, onPreview }) {
-  const names = bot.characters.map(c => c.name || "Unnamed").join(", ");
+  const names = bot.characters.map(c=>c.name||"Unnamed").join(", ");
   return (
-    <div className="bot-card" onClick={() => onPreview(bot)}>
+    <div className="bot-card" onClick={()=>onPreview(bot)}>
       <div className="bot-date">{fmtDate(bot.createdAt)}</div>
-      <div className="bot-title">{bot.title || "Untitled Scenario"}</div>
+      <div className="bot-title">{bot.title||"Untitled Scenario"}</div>
       <div className="bot-chars">{bot.characters.length} char{bot.characters.length!==1?"s":""}: <em>{names}</em></div>
-      {bot.scenario?.setting && (
-        <div className="bot-setting">{bot.scenario.setting.slice(0,70)}{bot.scenario.setting.length>70?"…":""}</div>
-      )}
+      {bot.scenario?.setting && <div className="bot-setting">{bot.scenario.setting.slice(0,70)}{bot.scenario.setting.length>70?"…":""}</div>}
     </div>
   );
 }
 
-/* ═══════════════ PREVIEW MODAL ═══════════════ */
-
+/* ═══════════════════════════════
+   PREVIEW MODAL
+═══════════════════════════════ */
 function PreviewModal({ bot, onClose, onEdit, onDelete }) {
-  const [confirm, setConfirm] = useState(false);
+  const [confirm,setConfirm] = useState(false);
   return (
-    <div className="overlay" onMouseDown={e => e.target===e.currentTarget && onClose()}>
+    <div className="overlay" onMouseDown={e=>e.target===e.currentTarget&&onClose()}>
       <div className="mpaper">
-        <div className="mtape" />
+        <div className="mtape"/>
         <button className="mclose" onClick={onClose}>✕</button>
         <div className="mbody">
-          <div className="mtitle">{bot.title || "Untitled Scenario"}</div>
+          <div className="mtitle">{bot.title||"Untitled Scenario"}</div>
           <div className="mdate">Created {fmtDate(bot.createdAt)}</div>
-          {bot.characters.map((c,i) => (
+          {bot.characters.map((c,i)=>(
             <div className="mchar-row" key={c.id}>
-              <span className="mchar-name">{c.name || `Character ${i+1}`}</span>
-              {(c.age||c.height) && (
-                <span className="mchar-meta">{c.age?`${c.age}y`:""}{c.age&&c.height?" · ":""}{c.height||""} · {c.gender}</span>
-              )}
-              {c.personality.length>0 && (
-                <span className="mchar-traits">{c.personality.slice(0,4).join(" · ")}{c.personality.length>4?" …":""}</span>
-              )}
+              <span className="mchar-name">{c.name||`Character ${i+1}`}</span>
+              {(c.age||c.height)&&<span className="mchar-meta">{c.age?`${c.age}y`:""}{c.age&&c.height?" · ":""}{c.height||""} · {c.gender}</span>}
+              {c.personality.length>0&&<span className="mchar-traits">{c.personality.slice(0,4).join(" · ")}{c.personality.length>4?" …":""}</span>}
             </div>
           ))}
-          {bot.scenario?.premise && (
-            <div className="mpremise">{bot.scenario.premise.slice(0,220)}{bot.scenario.premise.length>220?"…":""}</div>
-          )}
+          {bot.scenario?.premise&&<div className="mpremise">{bot.scenario.premise.slice(0,220)}{bot.scenario.premise.length>220?"…":""}</div>}
           <div className="mactions">
             <button className="btn-a btn-ink" onClick={onEdit}>Edit</button>
-            {confirm ? (
-              <>
-                <button className="btn-a btn-red" onClick={() => onDelete(bot.id)}>Confirm Delete</button>
-                <button className="btn-a btn-dim" onClick={() => setConfirm(false)}>Cancel</button>
-              </>
-            ) : (
-              <button className="btn-a btn-red" onClick={() => setConfirm(true)}>Delete</button>
-            )}
+            {confirm?(
+              <><button className="btn-a btn-red" onClick={()=>onDelete(bot.id)}>Confirm Delete</button>
+              <button className="btn-a btn-dim" onClick={()=>setConfirm(false)}>Cancel</button></>
+            ):<button className="btn-a btn-red" onClick={()=>setConfirm(true)}>Delete</button>}
           </div>
         </div>
       </div>
@@ -653,19 +883,18 @@ function PreviewModal({ bot, onClose, onEdit, onDelete }) {
   );
 }
 
-/* ═══════════════ BOT EDITOR ═══════════════ */
+/* ═══════════════════════════════
+   BOT EDITOR
+═══════════════════════════════ */
+function BotEditor({ bot, onSave, onBack, onDraftChange, dark, onToggle, onSettings, onChat, chatOpen }) {
+  const [draft,setDraft] = useState(()=>JSON.parse(JSON.stringify(bot)));
 
-function BotEditor({ bot, onSave, onBack, onDraftChange }) {
-  const [draft, setDraft] = useState(() => JSON.parse(JSON.stringify(bot)));
+  const pSc  = (k,v)   => setDraft(d=>({...d,scenario:{...d.scenario,[k]:v}}));
+  const pCh  = (id,fn) => setDraft(d=>({...d,characters:d.characters.map(c=>c.id===id?fn(c):c)}));
+  const addC = ()      => setDraft(d=>({...d,characters:[...d.characters,newChar()]}));
+  const rmC  = id      => setDraft(d=>({...d,characters:d.characters.filter(c=>c.id!==id)}));
 
-  const pSc  = (k,v)   => setDraft(d => ({...d, scenario:{...d.scenario,[k]:v}}));
-  const pCh  = (id,fn) => setDraft(d => ({...d, characters:d.characters.map(c=>c.id===id?fn(c):c)}));
-  const addC = ()      => setDraft(d => ({...d, characters:[...d.characters, newChar()]}));
-  const rmC  = (id)    => setDraft(d => ({...d, characters:d.characters.filter(c=>c.id!==id)}));
-
-  useEffect(() => {
-    if (onDraftChange) onDraftChange(draft);
-  }, [draft]);
+  useEffect(()=>{ if(onDraftChange) onDraftChange(draft); },[draft]);
 
   return (
     <div className="editor">
@@ -673,16 +902,18 @@ function BotEditor({ bot, onSave, onBack, onDraftChange }) {
         <button className="btn-back" onClick={onBack}>← Back</button>
         <input className="title-inp" placeholder="Scenario title…"
           value={draft.title} onChange={e=>setDraft(d=>({...d,title:e.target.value}))} />
-        <button className="btn-save" onClick={() => onSave(draft)}>Save</button>
+        <button className="btn-topbar-icon" onClick={onSettings} title="Settings">⚙</button>
+        <button className="btn-topbar-icon" onClick={onToggle} title="Toggle theme">{dark?"☀":"☾"}</button>
+        <button className={`btn-topbar-text${chatOpen?" active":""}`} onClick={onChat}>✦ Assistant</button>
+        <button className="btn-save" onClick={()=>onSave(draft)}>Save</button>
       </div>
       <div className="ebody">
-
         <div className="esec">
           <div className="estitle">
             <span>Characters</span>
             <span className="escount">{draft.characters.length} total</span>
           </div>
-          {draft.characters.map((c,i) => (
+          {draft.characters.map((c,i)=>(
             <CharacterPanel key={c.id} char={c} index={i}
               canRemove={draft.characters.length>1}
               onRemove={()=>rmC(c.id)}
@@ -690,143 +921,108 @@ function BotEditor({ bot, onSave, onBack, onDraftChange }) {
           ))}
           <button className="addchar" onClick={addC}>＋ Add Another Character</button>
         </div>
-
         <div className="esec">
           <div className="estitle">Scenario</div>
           <ScenarioSection scenario={draft.scenario} characters={draft.characters}
             onSc={pSc} onDyn={(id,v)=>pCh(id,c=>({...c,dynamic:v}))} />
         </div>
-
         <div className="esec">
           <div className="estitle">Rules</div>
           <RulesSection rules={draft.rules} onChange={r=>setDraft(d=>({...d,rules:r}))} />
         </div>
-
       </div>
     </div>
   );
 }
 
-/* ═══════════════ CHARACTER PANEL ═══════════════ */
-
+/* ═══════════════════════════════
+   CHARACTER PANEL
+═══════════════════════════════ */
 function CharacterPanel({ char, index, canRemove, onRemove, onChange }) {
-  const [open, setOpen] = useState(true);
+  const [open,setOpen] = useState(true);
   const s = (k,v) => onChange(c=>({...c,[k]:v}));
+  const hdrColor = char.gender==="male" ? "#a8c8e8" : "#f0b8c8";
 
   return (
     <div className="cpanel">
-      <div className="cheader" onClick={()=>setOpen(o=>!o)}>
+      <div className="cheader" onClick={()=>setOpen(o=>!o)}
+        style={{borderBottom:`2.5px solid ${hdrColor}`}}>
         <span className="clabel">Character {index+1}{char.name?`: ${char.name}`:""}</span>
-
         <div className="gblocK" onClick={e=>e.stopPropagation()}>
           <span className={`glbl${char.gender==="female"?" on":""}`}>♀</span>
           <label className="gtog">
             <input type="checkbox" checked={char.gender==="male"}
-              onChange={e=>s("gender",e.target.checked?"male":"female")} />
-            <span className="gslider" />
+              onChange={e=>s("gender",e.target.checked?"male":"female")}/>
+            <span className="gslider"/>
           </label>
           <span className={`glbl${char.gender==="male"?" on":""}`}>♂</span>
         </div>
-
-        <button className="ciconbtn" onClick={e=>{e.stopPropagation();setOpen(o=>!o);}}>
-          {open?"▴":"▾"}
-        </button>
-        {canRemove && (
-          <button className="ciconbtn" onClick={e=>{e.stopPropagation();onRemove();}}>✕</button>
-        )}
+        <button className="ciconbtn" onClick={e=>{e.stopPropagation();setOpen(o=>!o);}}>{open?"▴":"▾"}</button>
+        {canRemove&&<button className="ciconbtn" onClick={e=>{e.stopPropagation();onRemove();}}>✕</button>}
       </div>
-
-      {open && (
+      {open&&(
         <div className="cbody">
           <div className="esub">Basic Information</div>
           <div className="frow">
             <div className="ffd"><div className="flbl">Name</div>
-              <input className="finp" placeholder="e.g. Lin Odessa"
-                value={char.name} onChange={e=>s("name",e.target.value)} /></div>
+              <input className="finp" placeholder="e.g. Lin Odessa" value={char.name} onChange={e=>s("name",e.target.value)}/></div>
             <div className="ffd"><div className="flbl">Age</div>
-              <input className="finp" placeholder="e.g. 26"
-                value={char.age} onChange={e=>s("age",e.target.value)} /></div>
+              <input className="finp" placeholder="e.g. 26" value={char.age} onChange={e=>s("age",e.target.value)}/></div>
             <div className="ffd"><div className="flbl">Height</div>
-              <input className="finp" placeholder="e.g. 174 cm"
-                value={char.height} onChange={e=>s("height",e.target.value)} /></div>
+              <input className="finp" placeholder="e.g. 174 cm" value={char.height} onChange={e=>s("height",e.target.value)}/></div>
           </div>
           <div className="ffd" style={{marginBottom:"12px"}}>
             <div className="flbl">Physical Appearances</div>
             <textarea className="fta" rows={3} placeholder="Describe physical appearance…"
-              value={char.physicalAppearances} onChange={e=>s("physicalAppearances",e.target.value)} />
+              value={char.physicalAppearances} onChange={e=>s("physicalAppearances",e.target.value)}/>
           </div>
-
           <div className="esub">Personality Tropes</div>
-          <PersonalityPicker selected={char.personality} onChange={p=>s("personality",p)} />
-
+          <PersonalityPicker selected={char.personality} onChange={p=>s("personality",p)}/>
           <div className="esub">Motivation</div>
           <textarea className="fta" rows={2} placeholder="What drives this character?"
-            value={char.motivation||""} onChange={e=>s("motivation",e.target.value)} />
-
+            value={char.motivation||""} onChange={e=>s("motivation",e.target.value)}/>
           <div className="esub">Backstory</div>
-          <BackstoryList entries={char.backstory} onChange={v=>s("backstory",v)} />
-
+          <BackstoryList entries={char.backstory} onChange={v=>s("backstory",v)}/>
           <div className="esub">Intimacy Details</div>
           <textarea className="fta" rows={3} placeholder="Describe intimacy details, preferences, limits…"
-            value={char.intimacyDetails} onChange={e=>s("intimacyDetails",e.target.value)} />
+            value={char.intimacyDetails} onChange={e=>s("intimacyDetails",e.target.value)}/>
         </div>
       )}
     </div>
   );
 }
 
-/* ═══════════════ PERSONALITY PICKER ═══════════════ */
-
+/* ═══ PERSONALITY PICKER ═══ */
 function PersonalityPicker({ selected, onChange }) {
-  const tog = t => onChange(selected.includes(t) ? selected.filter(x=>x!==t) : [...selected,t]);
+  const tog = t => onChange(selected.includes(t)?selected.filter(x=>x!==t):[...selected,t]);
   return (
     <div>
-      <div className="tsel">
-        {selected.length>0 ? `${selected.length} selected: ${selected.join(" · ")}` : "None — click to pick tropes"}
-      </div>
-      <div className="tgrid">
-        {TROPES.map(t => (
-          <button key={t} className={`tchip${selected.includes(t)?" on":""}`}
-            onClick={()=>tog(t)}>{t}</button>
-        ))}
-      </div>
+      <div className="tsel">{selected.length>0?`${selected.length} selected: ${selected.join(" · ")}`:"None — click to pick tropes"}</div>
+      <div className="tgrid">{TROPES.map(t=><button key={t} className={`tchip${selected.includes(t)?" on":""}`} onClick={()=>tog(t)}>{t}</button>)}</div>
     </div>
   );
 }
 
-/* ═══════════════ BACKSTORY LIST ═══════════════ */
-
+/* ═══ BACKSTORY LIST ═══ */
 function BackstoryList({ entries, onChange }) {
   const dragIdx = useRef(null);
-  const [over, setOver] = useState(null);
-
+  const [over,setOver] = useState(null);
   const upd = (id,t) => onChange(entries.map(e=>e.id===id?{...e,text:t}:e));
-  const add = () => onChange([...entries, {id:uid(),text:""}]);
-  const rm  = (id) => { if (entries.length>1) onChange(entries.filter(e=>e.id!==id)); };
-
+  const add = () => onChange([...entries,{id:uid(),text:""}]);
+  const rm  = id => { if(entries.length>1) onChange(entries.filter(e=>e.id!==id)); };
   return (
     <div>
       <div className="bslist">
-        {entries.map((e,i) => (
-          <div key={e.id}
-            className={`bsitem${over===i?" dragov":""}`}
-            draggable
-            onDragStart={()=>{ dragIdx.current=i; }}
-            onDragOver={ev=>{ ev.preventDefault(); setOver(i); }}
-            onDrop={()=>{
-              if (dragIdx.current!==null && dragIdx.current!==i) {
-                const a=[...entries]; const [x]=a.splice(dragIdx.current,1); a.splice(i,0,x);
-                onChange(a);
-              }
-              dragIdx.current=null; setOver(null);
-            }}
-            onDragEnd={()=>{ dragIdx.current=null; setOver(null); }}
-          >
+        {entries.map((e,i)=>(
+          <div key={e.id} className={`bsitem${over===i?" dragov":""}`} draggable
+            onDragStart={()=>{dragIdx.current=i;}}
+            onDragOver={ev=>{ev.preventDefault();setOver(i);}}
+            onDrop={()=>{ if(dragIdx.current!=null&&dragIdx.current!==i){const a=[...entries];const[x]=a.splice(dragIdx.current,1);a.splice(i,0,x);onChange(a);}dragIdx.current=null;setOver(null); }}
+            onDragEnd={()=>{dragIdx.current=null;setOver(null);}}>
             <span className="bsdrag">⠿</span>
             <textarea className="bsta" rows={2} placeholder={`Entry ${i+1}…`}
               value={e.text} onChange={ev=>upd(e.id,ev.target.value)}
-              onKeyDown={ev=>{ if(ev.key==="Enter"&&!ev.shiftKey){ev.preventDefault();add();} }}
-            />
+              onKeyDown={ev=>{if(ev.key==="Enter"&&!ev.shiftKey){ev.preventDefault();add();}}}/>
             <button className="bsrm" onClick={()=>rm(e.id)}>✕</button>
           </div>
         ))}
@@ -836,42 +1032,33 @@ function BackstoryList({ entries, onChange }) {
   );
 }
 
-/* ═══════════════ SCENARIO SECTION ═══════════════ */
-
+/* ═══ SCENARIO SECTION ═══ */
 function ScenarioSection({ scenario, characters, onSc, onDyn }) {
-  const inp  = (lbl, k, ph="") => (
-    <div className="scf">
-      <div className="flbl">{lbl}</div>
-      <input className="finp" placeholder={ph} value={scenario[k]||""} onChange={e=>onSc(k,e.target.value)} />
-    </div>
+  const inp = (lbl,k,ph="") => (
+    <div className="scf"><div className="flbl">{lbl}</div>
+      <input className="finp" placeholder={ph} value={scenario[k]||""} onChange={e=>onSc(k,e.target.value)}/></div>
   );
-  const txa  = (lbl, k, ph="") => (
-    <div className="scf sp">
-      <div className="flbl">{lbl}</div>
-      <textarea className="fta" rows={3} placeholder={ph} value={scenario[k]||""} onChange={e=>onSc(k,e.target.value)} />
-    </div>
+  const txa = (lbl,k,ph="") => (
+    <div className="scf sp"><div className="flbl">{lbl}</div>
+      <textarea className="fta" rows={3} placeholder={ph} value={scenario[k]||""} onChange={e=>onSc(k,e.target.value)}/></div>
   );
-
   return (
     <div className="sc-wrap">
       <div className="scgrid">
-        {inp("Setting",    "setting",    "e.g. A ruined coastal city")}
-        {inp("Time Period","timePeriod", "e.g. Post-apocalyptic 2047")}
+        {inp("Setting","setting","e.g. A ruined coastal city")}
+        {inp("Time Period","timePeriod","e.g. Post-apocalyptic 2047")}
         {inp("Overall Tone","overallTone","e.g. Dark, melancholic, tense")}
-        <div style={{gridColumn:"1/-1"}} />
-
+        <div style={{gridColumn:"1/-1"}}/>
         {txa("Premise","premise","Describe the core premise of the scenario…")}
-
         <div className="scsub">Character Dynamics</div>
-        {characters.map((c,i) => (
+        {characters.map((c,i)=>(
           <div className="scf sp" key={c.id}>
             <div className="flbl">{c.name||`Character ${i+1}`} and {"{{user}}"} Dynamic</div>
             <textarea className="fta" rows={2}
               placeholder={`How does ${c.name||"this character"} relate to {{user}}?`}
-              value={c.dynamic||""} onChange={e=>onDyn(c.id,e.target.value)} />
+              value={c.dynamic||""} onChange={e=>onDyn(c.id,e.target.value)}/>
           </div>
         ))}
-
         <div className="scsub">Supporting Cast &amp; Opening</div>
         {txa("Important Supporting Characters","importantSupportingCharacters","List supporting characters and their roles…")}
         {txa("Starting Situation (in intro message 1)","startingSituation","Describe the opening scene or situation…")}
@@ -880,19 +1067,18 @@ function ScenarioSection({ scenario, characters, onSc, onDyn }) {
   );
 }
 
-/* ═══════════════ RULES SECTION ═══════════════ */
-
+/* ═══ RULES SECTION ═══ */
 function RulesSection({ rules, onChange }) {
   const upd = (i,v) => { const r=[...rules]; r[i]=v; onChange(r); };
-  const rm  = (i)   => onChange(rules.filter((_,j)=>j!==i));
+  const rm  = i     => onChange(rules.filter((_,j)=>j!==i));
   const add = ()    => onChange([...rules,""]);
   return (
     <div>
       <div className="rlist">
-        {rules.map((r,i) => (
+        {rules.map((r,i)=>(
           <div className="rrow" key={i}>
             <span className="rnum">{i+1}.</span>
-            <textarea className="rinp" rows={2} value={r} onChange={e=>upd(i,e.target.value)} />
+            <textarea className="rinp" rows={2} value={r} onChange={e=>upd(i,e.target.value)}/>
             <button className="rrm" onClick={()=>rm(i)}>✕</button>
           </div>
         ))}
@@ -902,8 +1088,8 @@ function RulesSection({ rules, onChange }) {
   );
 }
 
-/* ═══════════════ MOUNT ═══════════════ */
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+/* ═══ MOUNT ═══ */
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
 </script>
 </body>
 </html>
