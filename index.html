@@ -737,7 +737,11 @@ const loadTheme    = () => localStorage.getItem("cs_theme")==="dark";
 const loadSettings = () => { try{return JSON.parse(localStorage.getItem("cs_settings")||"{}")}catch{return{}} };
 const saveSettings = s  => localStorage.setItem("cs_settings", JSON.stringify(s));
 const loadChats    = () => { try{return JSON.parse(localStorage.getItem("cs_chats")||"{}")}catch{return{}} };
-const saveChats    = c  => localStorage.setItem("cs_chats", JSON.stringify(c));
+let _saveChatsTimer = null;
+const saveChats = c => {
+  clearTimeout(_saveChatsTimer);
+  _saveChatsTimer = setTimeout(() => { try { localStorage.setItem("cs_chats", JSON.stringify(c)); } catch{} }, 600);
+};
 
 /* ═══ COPY FORMATTER ═══ */
 function formatDocx(bot) {
@@ -812,9 +816,9 @@ function App() {
   const { dark, toggle }             = useTheme();
   const liveDraftRef                 = useRef(null);
 
-  useEffect(()=>saveBots(bots),[bots]);
-  useEffect(()=>saveSettings(settings),[settings]);
-  useEffect(()=>saveChats(chats),[chats]);
+  useEffect(()=>{ try{saveBots(bots);}catch{} },[bots]);
+  useEffect(()=>{ try{saveSettings(settings);}catch{} },[settings]);
+  useEffect(()=>{ try{saveChats(chats);}catch{} },[chats]);
 
   /* fetch Chutes model list */
   const fetchModels = useCallback(async (key) => {
@@ -1638,8 +1642,27 @@ function RulesSection({ rules, onChange }) {
   );
 }
 
+/* ═══ ERROR BOUNDARY ═══ */
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { err: null }; }
+  static getDerivedStateFromError(e) { return { err: e }; }
+  render() {
+    if (this.state.err) {
+      return (
+        <div style={{padding:"40px",fontFamily:"'Courier Prime',monospace",color:"var(--red)",background:"var(--bg)",minHeight:"100vh"}}>
+          <div style={{fontSize:"1.1rem",marginBottom:"12px"}}>⚠ Something went wrong</div>
+          <div style={{fontSize:"0.75rem",color:"var(--ink-faint)",whiteSpace:"pre-wrap",wordBreak:"break-all"}}>{String(this.state.err)}</div>
+          <button style={{marginTop:"20px",fontFamily:"'Courier Prime',monospace",fontSize:"0.75rem",textTransform:"uppercase",letterSpacing:"1px",background:"none",border:"1px solid var(--ink-faint)",color:"var(--ink-faint)",padding:"8px 16px",cursor:"pointer"}}
+            onClick={()=>this.setState({err:null})}>↺ Try to recover</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 /* ═══ MOUNT ═══ */
-ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+ReactDOM.createRoot(document.getElementById("root")).render(<ErrorBoundary><App/></ErrorBoundary>);
 </script>
 </body>
 </html>
