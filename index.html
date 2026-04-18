@@ -1159,6 +1159,7 @@ function RightPanel({ open, onClose, settings, getDraft, chatHistory, setChatHis
     if (settings.proxyPresPen != null) body.presence_penalty     = settings.proxyPresPen;
     if (settings.proxyRepPen  != null) body.repetition_penalty   = settings.proxyRepPen;
     if (settings.proxySeed    != null) body.seed                 = settings.proxySeed;
+    if (settings.proxyCtx     != null) body.max_context_length   = settings.proxyCtx;
 
     try {
       const res = await fetch(`${CHUTES_BASE}/chat/completions`,{
@@ -1166,7 +1167,7 @@ function RightPanel({ open, onClose, settings, getDraft, chatHistory, setChatHis
         headers:{"Content-Type":"application/json","Authorization":`Bearer ${settings.apiKey}`},
         body:JSON.stringify(body)
       });
-      if (!res.ok) { const t=await res.text(); throw new Error(`HTTP ${res.status}: ${t}`); }
+      if (!res.ok) { const t=await res.text(); throw new Error(`HTTP ${res.status}: ${t.slice(0,300)}`); }
 
       if (settings.proxyStream) {
         const reader = res.body.getReader();
@@ -1179,27 +1180,47 @@ function RightPanel({ open, onClose, settings, getDraft, chatHistory, setChatHis
           if (done) break;
           buf += dec.decode(value, {stream:true});
           const lines = buf.split("\n");
-          buf = lines.pop();
+          buf = lines.pop() ?? "";
           for (const line of lines) {
             const l = line.trim();
             if (!l || l==="data: [DONE]") continue;
             if (l.startsWith("data: ")) {
               try {
                 const chunk = JSON.parse(l.slice(6));
-                const delta = chunk.choices?.[0]?.delta?.content || "";
-                reply += delta;
-                setChatHistory(h=>{
-                  const next=[...h];
-                  next[next.length-1]={role:"assistant",content:reply};
-                  return next;
-                });
+                const delta = chunk.choices?.[0]?.delta?.content;
+                if (typeof delta === "string") {
+                  reply += delta;
+                  setChatHistory(h=>{
+                    const next=[...h];
+                    next[next.length-1]={role:"assistant",content:reply};
+                    return next;
+                  });
+                }
               } catch{}
             }
           }
         }
+        // flush any remaining partial line
+        if (buf.trim().startsWith("data: ")) {
+          try {
+            const chunk = JSON.parse(buf.trim().slice(6));
+            const delta = chunk.choices?.[0]?.delta?.content;
+            if (typeof delta === "string" && delta) {
+              reply += delta;
+              setChatHistory(h=>{
+                const next=[...h]; next[next.length-1]={role:"assistant",content:reply}; return next;
+              });
+            }
+          } catch{}
+        }
+        if (!reply) {
+          setChatHistory(h=>{
+            const next=[...h]; next[next.length-1]={role:"assistant",content:"(empty response)"}; return next;
+          });
+        }
       } else {
         const data  = await res.json();
-        const reply = data.choices?.[0]?.message?.content || "(empty response)";
+        const reply = data.choices?.[0]?.message?.content || data.error?.message || "(empty response)";
         setChatHistory([...nextHist,{role:"assistant",content:reply}]);
       }
     } catch(e) {
