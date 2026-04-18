@@ -7,7 +7,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;1,400&family=Courier+Prime:ital@0;1&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;1,400&family=Courier+Prime:ital@0;1&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg:          #e8dfc8;
@@ -389,6 +389,115 @@
       .fab-cluster { bottom:18px; right:14px; }
       .fab-copy { padding:12px 18px; font-size:0.8rem; }
     }
+    /* ── Settings controls ── */
+    .lp-row-2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .lp-field { display:flex; flex-direction:column; gap:4px; }
+    .lp-num {
+      font-family:'Courier Prime',monospace; font-size:0.82rem;
+      background:var(--paper); border:1px solid var(--paper-line);
+      color:var(--ink); padding:6px 8px; outline:none; width:100%;
+    }
+    .lp-num:focus { border-color:var(--ink-mid); }
+    .lp-ta {
+      font-family:'Lora',serif; font-size:0.8rem;
+      background:var(--paper); border:1px solid var(--paper-line);
+      color:var(--ink); padding:8px 10px; outline:none; width:100%;
+      resize:vertical; min-height:72px; line-height:1.55;
+    }
+    .lp-ta:focus { border-color:var(--ink-mid); }
+    .lp-ta::placeholder { color:var(--ink-faint); font-style:italic; }
+    .lp-toggle-row { display:flex; align-items:center; justify-content:space-between; }
+    .lp-toggle-lbl { font-family:'Courier Prime',monospace; font-size:0.7rem; color:var(--ink-mid); text-transform:uppercase; letter-spacing:1px; }
+    .lp-tog { position:relative; display:inline-block; width:42px; height:20px; flex-shrink:0; }
+    .lp-tog input { opacity:0; width:0; height:0; }
+    .lp-tslider { position:absolute; inset:0; cursor:pointer; background:var(--paper-dark); border:1.5px solid var(--ink-faint); }
+    .lp-tslider::before { content:''; position:absolute; height:12px; width:12px; left:2px; bottom:2px; background:var(--ink-faint); transition:transform 0.2s, background 0.2s; }
+    .lp-tog input:checked + .lp-tslider { border-color:var(--red); }
+    .lp-tog input:checked + .lp-tslider::before { transform:translateX(22px); background:var(--red); }
+    .adv-toggle {
+      font-family:'Courier Prime',monospace; font-size:0.65rem; text-transform:uppercase;
+      letter-spacing:1.5px; background:none; border:none; color:var(--ink-faint);
+      cursor:pointer; padding:0; display:flex; align-items:center; gap:6px;
+    }
+    .adv-toggle:hover { color:var(--ink); }
+    .adv-body { display:flex; flex-direction:column; gap:10px; margin-top:10px; }
+    .guide-loaded { display:flex; align-items:center; justify-content:space-between; gap:8px; background:var(--paper); border:1px solid var(--paper-line); padding:7px 10px; }
+    .guide-name { font-family:'Courier Prime',monospace; font-size:0.7rem; color:var(--red); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .guide-clear { background:none; border:none; cursor:pointer; color:var(--ink-faint); font-size:0.72rem; flex-shrink:0; font-family:'Courier Prime',monospace; }
+    .guide-clear:hover { color:var(--red); }
+    .guide-upload-btn {
+      font-family:'Courier Prime',monospace; font-size:0.7rem; text-transform:uppercase;
+      letter-spacing:1px; background:none; border:1px dashed var(--ink-faint);
+      color:var(--ink-faint); padding:8px 12px; cursor:pointer; display:inline-block; width:100%; text-align:center;
+    }
+    .guide-upload-btn:hover { border-color:var(--ink); color:var(--ink); }
+
+    /* ── Dynamics Editor ── */
+    .dyn-list { display:flex; flex-direction:column; gap:14px; margin-bottom:8px; }
+    .dyn-entry { background:var(--paper); border:1px solid var(--paper-line); padding:10px 12px 10px; }
+    .dyn-pair { display:flex; align-items:center; gap:8px; margin-bottom:9px; flex-wrap:wrap; }
+    .dyn-sel {
+      font-family:'Courier Prime',monospace; font-size:0.72rem;
+      background:var(--paper-dark); border:1px solid var(--paper-line);
+      color:var(--ink); padding:5px 8px; outline:none; cursor:pointer;
+      text-transform:uppercase; letter-spacing:0.5px; flex:1; min-width:90px; max-width:160px;
+    }
+    .dyn-sel:focus { border-color:var(--ink-mid); }
+    .dyn-arrow { color:var(--red); font-size:1rem; flex-shrink:0; user-select:none; }
+    .dyn-rm { background:none; border:none; cursor:pointer; color:var(--ink-faint); font-size:0.75rem; padding:2px 5px; margin-left:auto; flex-shrink:0; }
+    .dyn-rm:hover { color:var(--red); }
+
+
+    .saved-toast {
+      position: fixed;
+      right: 0;
+      top: 50%;
+      z-index: 1000;
+      background: var(--ink);
+      color: var(--paper);
+      padding: 16px 32px 16px 22px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: -5px 0 28px var(--shadow);
+      border-left: 3px solid var(--red);
+      animation: toastSlide 3.2s cubic-bezier(0.4,0,0.2,1) forwards;
+      pointer-events: none;
+    }
+    .saved-ink {
+      font-family: 'Courier Prime', monospace;
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--ink-faint);
+      opacity: 0;
+      animation: fadeLabel 0.3s 0.5s forwards;
+    }
+    .saved-text {
+      font-family: 'Dancing Script', cursive;
+      font-size: 1.65rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      clip-path: inset(0 100% 0 0);
+      animation: writeReveal 0.75s 0.45s cubic-bezier(0.22,1,0.36,1) forwards;
+      line-height: 1;
+    }
+    @keyframes toastSlide {
+      0%   { transform: translateY(-50%) translateX(110%); }
+      14%  { transform: translateY(-50%) translateX(0%);   }
+      78%  { transform: translateY(-50%) translateX(0%);   }
+      100% { transform: translateY(-50%) translateX(110%); }
+    }
+    @keyframes writeReveal {
+      from { clip-path: inset(0 100% 0 0); }
+      to   { clip-path: inset(0 0%   0 0); }
+    }
+    @keyframes fadeLabel {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
   </style>
 </head>
 <body>
@@ -427,6 +536,146 @@ const DEFAULT_RULES = [
 ];
 const CHUTES_BASE = "https://llm.chutes.ai/v1";
 
+const ROLEPLAY_HARNESS = `# Roleplay Robustness & Character Fidelity Guide
+### A Harness Prompt for AI Roleplay & Character Creation Systems — SFW & NSFW
+
+---
+
+## PURPOSE
+
+This document is a behavioral harness for AI systems engaging in collaborative roleplay and character creation. It is designed to be read and internalized as a persistent instruction set. Its goal is to produce roleplay and characters that feel *written by a person who knows their craft* — not generated by a machine pattern-matching against tropes.
+
+Apply this guide to all sessions, SFW or NSFW, unless a specific override is given by the user.
+
+Two core functions are governed here:
+
+1. **Roleplay execution** — inhabiting and voicing characters in collaborative fiction
+2. **Character creation** — building characters from scratch or from a user's brief
+
+Both functions share the same foundational standards. Neither is an excuse for shortcuts.
+
+---
+
+## PART ONE: THE CORE PHILOSOPHY
+
+Roleplay is collaborative fiction. Your role is not to *perform* a character — it is to *inhabit* one. The difference matters enormously. Performing is external; inhabiting is internal. When you inhabit a character, every line they speak emerges from who they are: their history, their voice, their specific way of seeing the world.
+
+**You are not a narrator describing a character. You are a writer giving that character breath.**
+
+This means:
+- The character speaks. You do not describe them speaking.
+- The character thinks and feels. You do not announce their thoughts and feelings.
+- The character reacts. You do not explain their reactions.
+
+Show, don't tell — but more than that: *be*, don't show.
+
+Character creation is the upstream version of the same discipline. A character you build poorly will be impossible to inhabit well. Build them as a person, not as a profile.
+
+---
+
+## PART TWO: NATURAL SPEECH
+
+### 2.1 Write How People Actually Talk
+
+Real human speech is imprecise, interrupted, layered, and idiosyncratic. It carries personality in its structure, not just its content. Characters should sound distinct from one another and distinct from narrative prose.
+
+**Good signals of natural speech:**
+- Contractions used where natural
+- Sentence fragments when appropriate
+- Self-interruption and trailing off
+- Filler and hesitation only when it *belongs* to the character
+- Sentences that start mid-thought when the character is flustered or urgent
+- Characters who don't always answer the question they were asked
+
+**Bad signals of artificial speech:**
+- Every sentence is grammatically complete and balanced
+- Characters always address exactly what was said, in order
+- Responses feel like a full paragraph of explanation when a real person would give three words
+- Dialogue reads like a spokesperson, not a person
+
+### 2.2 Match Register to Context
+
+A character who is formal in professional settings should not suddenly speak like a textbook when they're drunk, scared, or in bed. Register shifts must be motivated by the character's state, not by the dramatic weight of the scene.
+
+### 2.3 Silence and Brevity Are Valid
+
+Not every moment calls for a response. Characters can give one-word answers, change the subject, go quiet, or react physically instead of verbally. Forcing dialogue into every beat makes scenes feel stagey.
+
+---
+
+## PART THREE: CHARACTER FIDELITY (ROLEPLAY)
+
+### 3.1 The Character Sheet Is Law
+
+If a character has been defined, that definition is your foundation. You do not reinterpret, soften, amplify, or editorialize on it unless asked to. Honor vocabulary, values, emotional range, and contradictions.
+
+### 3.2 Stay In-Voice At All Times
+
+The character's voice is consistent whether they are explaining, arguing, flirting, afraid, or delivering exposition. The *content* changes. The *voice* does not.
+
+### 3.3 Don't Let the Scene Overwrite the Character
+
+Heavy scenes exert gravitational pull toward generic emotional expression. Resist this. The character filters every scene through their particular lens.
+
+---
+
+## PART FOUR: CHARACTER CREATION
+
+### 4.1 Characters Are Not Profiles
+
+A character is a *person* — specific, contradictory, shaped by experience. Build the person. The profile can be extracted from the person. It does not work the other way around.
+
+### 4.2 The Four Foundations
+
+Every character must have: a concrete **want** (external), an internal **need** in tension with the want, a specific **wound**, and a real **contradiction** that hasn't been smoothed out.
+
+### 4.3 Voice Before Appearance
+
+Establish voice before appearance. Know the rhythm of how they speak, what they overuse, whether they interrupt, how they use humor, what makes them go quiet.
+
+### 4.4 Avoid Archetype Collapse
+
+Archetypes are starting points, not destinations. Find the specific person inside the archetype. A stoic is not stoic in every situation — find the cracks.
+
+---
+
+## PART FIVE: NSFW STANDARDS
+
+Explicit content is not exempt from craft standards. Intimacy scenes must serve characterization. Physical description alone is not a scene. The character's voice, psychology, and history must be present.
+
+Avoid genre-template prose unless specifically requested. Do not treat explicit content as a different mode with different standards — the same rules of voice, naturalness, and fidelity apply.
+
+---
+
+## PART SIX: WHAT TO AVOID
+
+**Banned phrases and patterns:**
+- "A wave of [emotion] washed over them"
+- "Their heart hammered in their chest"
+- "They had never felt so [adjective] in their entire life"
+- "Emotions warred within them"
+- Purple prose emotion announcements of any kind
+- Describing the character doing something instead of writing them doing it
+- Summarizing what just happened before advancing the scene
+- Referring to the user in second person while also narrating their reactions
+
+---
+
+## PART SEVEN: SCENE MANAGEMENT
+
+Match the energy of the collaborative partner. Do not hijack the scene. Leave room for the other person to contribute. Track continuity — what was established stays established.
+
+---
+
+## PART EIGHT: TONE CALIBRATION
+
+Know the tonal register of every scene. Do not let one character's comedy undercut another's genuine grief unless intentional. Big emotional moments are earned, not declared.
+
+---
+
+*End of document. This guide should be treated as a persistent behavioral baseline for all roleplay and character creation sessions. Override individual sections only at explicit user request.*`;
+
+
 /* ═══ HELPERS ═══ */
 const uid     = () => Math.random().toString(36).slice(2,10);
 const fmtDate = iso => new Date(iso).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
@@ -435,12 +684,12 @@ const newChar = () => ({
   physicalAppearances:"", gender:"female",
   personality:[], motivation:"",
   backstory:[{id:uid(),text:""}],
-  intimacyDetails:"", dynamic:""
+  intimacyDetails:""
 });
 const newBot = () => ({
   id:uid(), title:"", createdAt:new Date().toISOString(),
   characters:[newChar()],
-  scenario:{setting:"",timePeriod:"",overallTone:"",premise:"",importantSupportingCharacters:"",startingSituation:""},
+  scenario:{setting:"",timePeriod:"",overallTone:"",premise:"",importantSupportingCharacters:"",dynamics:[]},
   rules:[...DEFAULT_RULES]
 });
 
@@ -476,27 +725,24 @@ function formatDocx(bot) {
   s += `Time Period: ${bot.scenario.timePeriod}\n\n`;
   s += `Overall Tone: ${bot.scenario.overallTone}\n\n`;
   s += `Premise: ${bot.scenario.premise}\n\n`;
-  bot.characters.forEach((c,i)=>{
-    const lbl = c.name||`Character ${i+1}`;
-    s += `${lbl} and {{user}} Dynamic: ${c.dynamic||""}\n\n`;
-  });
+  const dyns = bot.scenario.dynamics || [];
+  if (dyns.length > 0) {
+    s += `> Character Dynamics\n\n`;
+    dyns.forEach(d=>{ if(d.description&&d.description.trim()) s+=`${d.charA} - ${d.charB}: ${d.description.trim()}\n\n`; });
+  }
   s += `Important Supporting Characters: ${bot.scenario.importantSupportingCharacters}\n\n`;
-  s += `Starting Situation (in intro message 1): ${bot.scenario.startingSituation}\n\n`;
   s += `\n> Rules\n\n`;
   bot.rules.forEach(r=>{ s+=`• ${r}\n\n`; });
   return s;
 }
 
 /* ═══ SYSTEM PROMPT ═══ */
-function buildSystemPrompt(bot) {
-  if (!bot) return "You are a helpful creative writing assistant.";
-  return `You are a creative writing assistant helping the user build and refine characters and scenarios for a roleplay chatbot.
-
-Current character & scenario data:
-
-${formatDocx(bot)}
-
-Use this context to help develop characters, refine backstory, suggest personality traits, advise on dialogue style, improve the scenario, or answer any creative writing question. When the user says "the character" or "them", refer to the characters above. Be specific, imaginative, and helpful.`;
+function buildSystemPrompt(bot, settings) {
+  const parts = [];
+  if (settings?.proxyCustomPrompt?.trim()) parts.push(settings.proxyCustomPrompt.trim());
+  parts.push(settings?.guide || ROLEPLAY_HARNESS);
+  if (bot) parts.push(`---\n\nCurrent character & scenario data:\n\n${formatDocx(bot)}`);
+  return parts.join("\n\n");
 }
 
 /* ═══ THEME HOOK ═══ */
@@ -556,7 +802,7 @@ function App() {
   const goEdit = b  => { setPreviewBot(null); setEditBot(JSON.parse(JSON.stringify(b))); setView("editor"); };
   const goBack = () => { setView("dash"); setEditBot(null); liveDraftRef.current=null; setRightOpen(false); };
 
-  const handleSave   = b => { setBots(p=>{const i=p.findIndex(x=>x.id===b.id);if(i>=0){const n=[...p];n[i]=b;return n;}return[...p,b];}); goBack(); };
+  const handleSave   = b => { setBots(p=>{const i=p.findIndex(x=>x.id===b.id);if(i>=0){const n=[...p];n[i]=b;return n;}return[...p,b];}); };
   const handleDelete = id=> { setBots(p=>p.filter(b=>b.id!==id)); setPreviewBot(null); };
 
   const handleCopy = () => {
@@ -632,6 +878,7 @@ function App() {
 ═══════════════════════════════ */
 function LeftPanel({ open, onClose, settings, onSettings, models, modLoading, modError, onRefresh }) {
   const set = (k,v) => onSettings(s=>({...s,[k]:v}));
+  const [advOpen, setAdvOpen] = useState(false);
 
   const fmtPrice = pricing => {
     if (!pricing) return null;
@@ -650,20 +897,21 @@ function LeftPanel({ open, onClose, settings, onSettings, models, modLoading, mo
       </div>
       <div className="lp-body">
 
+        {/* ── API Key ── */}
         <div className="lp-sec">
           <div className="lp-lbl">Chutes API Key</div>
           <input className="lp-inp" type="password" placeholder="chutes_…"
             value={settings.apiKey||""} onChange={e=>set("apiKey",e.target.value)} />
-          <div className="lp-hint">Your key is saved only in this browser.<br/>Get one free at chutes.ai</div>
+          <div className="lp-hint">Saved only in this browser. Get one free at chutes.ai</div>
         </div>
 
         <hr className="lp-hr"/>
 
+        {/* ── Models ── */}
         <div className="lp-sec">
           <div className="lp-row">
             <div className="lp-lbl">Models</div>
-            <button className="lp-btn" onClick={onRefresh}
-              disabled={!settings.apiKey||modLoading}>
+            <button className="lp-btn" onClick={onRefresh} disabled={!settings.apiKey||modLoading}>
               {modLoading?"Loading…":"↻ Refresh"}
             </button>
           </div>
@@ -674,8 +922,7 @@ function LeftPanel({ open, onClose, settings, onSettings, models, modLoading, mo
               {models.map(m=>{
                 const price = fmtPrice(m.pricing);
                 return (
-                  <div key={m.id}
-                    className={`model-item${settings.selectedModel===m.id?" sel":""}`}
+                  <div key={m.id} className={`model-item${settings.selectedModel===m.id?" sel":""}`}
                     onClick={()=>set("selectedModel",m.id)}>
                     <span className="model-n">{m.id}</span>
                     {price && <span className="model-p">{price}</span>}
@@ -698,6 +945,138 @@ function LeftPanel({ open, onClose, settings, onSettings, models, modLoading, mo
             </div>
           </>
         )}
+
+        <hr className="lp-hr"/>
+
+        {/* ── Proxy Settings ── */}
+        <div className="lp-sec">
+          <div className="lp-lbl">Proxy Settings</div>
+
+          <div className="lp-row-2">
+            <div className="lp-field">
+              <div className="lp-lbl" style={{fontSize:"0.58rem"}}>Temperature</div>
+              <input className="lp-num" type="number" min="0" max="2" step="0.05"
+                placeholder="0.8"
+                value={settings.proxyTemp??""} onChange={e=>set("proxyTemp", e.target.value===""?undefined:parseFloat(e.target.value))}/>
+            </div>
+            <div className="lp-field">
+              <div className="lp-lbl" style={{fontSize:"0.58rem"}}>Max Tokens</div>
+              <input className="lp-num" type="number" min="64" max="32768" step="64"
+                placeholder="1024"
+                value={settings.proxyMaxTokens??""} onChange={e=>set("proxyMaxTokens", e.target.value===""?undefined:parseInt(e.target.value))}/>
+            </div>
+          </div>
+
+          <div className="lp-field" style={{marginTop:"8px"}}>
+            <div className="lp-lbl" style={{fontSize:"0.58rem"}}>Context Size (tokens)</div>
+            <input className="lp-num" type="number" min="512" max="131072" step="512"
+              placeholder="Default (model max)"
+              value={settings.proxyCtx??""} onChange={e=>set("proxyCtx", e.target.value===""?undefined:parseInt(e.target.value))}/>
+          </div>
+
+          <div className="lp-toggle-row" style={{marginTop:"10px"}}>
+            <span className="lp-toggle-lbl">Stream responses</span>
+            <label className="lp-tog">
+              <input type="checkbox" checked={!!settings.proxyStream}
+                onChange={e=>set("proxyStream", e.target.checked)}/>
+              <span className="lp-tslider"/>
+            </label>
+          </div>
+        </div>
+
+        <hr className="lp-hr"/>
+
+        {/* ── Advanced ── */}
+        <div className="lp-sec">
+          <button className="adv-toggle" onClick={()=>setAdvOpen(o=>!o)}>
+            <span>{advOpen?"▾":"▸"}</span> Advanced Parameters
+          </button>
+          {advOpen && (
+            <div className="adv-body">
+              <div className="lp-row-2">
+                <div className="lp-field">
+                  <div className="lp-lbl" style={{fontSize:"0.58rem"}}>Top P</div>
+                  <input className="lp-num" type="number" min="0" max="1" step="0.01"
+                    placeholder="default"
+                    value={settings.proxyTopP??""} onChange={e=>set("proxyTopP", e.target.value===""?undefined:parseFloat(e.target.value))}/>
+                </div>
+                <div className="lp-field">
+                  <div className="lp-lbl" style={{fontSize:"0.58rem"}}>Top K</div>
+                  <input className="lp-num" type="number" min="0" max="200" step="1"
+                    placeholder="default"
+                    value={settings.proxyTopK??""} onChange={e=>set("proxyTopK", e.target.value===""?undefined:parseInt(e.target.value))}/>
+                </div>
+              </div>
+              <div className="lp-row-2">
+                <div className="lp-field">
+                  <div className="lp-lbl" style={{fontSize:"0.58rem"}}>Freq. Penalty</div>
+                  <input className="lp-num" type="number" min="-2" max="2" step="0.05"
+                    placeholder="default"
+                    value={settings.proxyFreqPen??""} onChange={e=>set("proxyFreqPen", e.target.value===""?undefined:parseFloat(e.target.value))}/>
+                </div>
+                <div className="lp-field">
+                  <div className="lp-lbl" style={{fontSize:"0.58rem"}}>Pres. Penalty</div>
+                  <input className="lp-num" type="number" min="-2" max="2" step="0.05"
+                    placeholder="default"
+                    value={settings.proxyPresPen??""} onChange={e=>set("proxyPresPen", e.target.value===""?undefined:parseFloat(e.target.value))}/>
+                </div>
+              </div>
+              <div className="lp-row-2">
+                <div className="lp-field">
+                  <div className="lp-lbl" style={{fontSize:"0.58rem"}}>Rep. Penalty</div>
+                  <input className="lp-num" type="number" min="0" max="2" step="0.01"
+                    placeholder="default"
+                    value={settings.proxyRepPen??""} onChange={e=>set("proxyRepPen", e.target.value===""?undefined:parseFloat(e.target.value))}/>
+                </div>
+                <div className="lp-field">
+                  <div className="lp-lbl" style={{fontSize:"0.58rem"}}>Seed</div>
+                  <input className="lp-num" type="number" min="0" step="1"
+                    placeholder="random"
+                    value={settings.proxySeed??""} onChange={e=>set("proxySeed", e.target.value===""?undefined:parseInt(e.target.value))}/>
+                </div>
+              </div>
+              <div className="lp-hint" style={{marginTop:"2px"}}>Leave blank to use model defaults.</div>
+            </div>
+          )}
+        </div>
+
+        <hr className="lp-hr"/>
+
+        {/* ── Custom Prompt ── */}
+        <div className="lp-sec">
+          <div className="lp-lbl">Custom Prompt</div>
+          <div className="lp-hint" style={{marginBottom:"6px"}}>Prepended above the roleplay harness. Use this to add personal instructions or override defaults.</div>
+          <textarea className="lp-ta" placeholder="e.g. Always write in British English. Avoid exposition dumps…"
+            value={settings.proxyCustomPrompt||""}
+            onChange={e=>set("proxyCustomPrompt", e.target.value)}/>
+        </div>
+
+        <hr className="lp-hr"/>
+
+        {/* ── Guide Upload ── */}
+        <div className="lp-sec">
+          <div className="lp-lbl">Harness Override</div>
+          <div className="lp-hint" style={{marginBottom:"6px"}}>Upload a <span style={{color:"var(--red)"}}>.md</span> to replace the built-in roleplay harness entirely.</div>
+          {settings.guideName ? (
+            <div className="guide-loaded">
+              <span className="guide-name">📄 {settings.guideName}</span>
+              <button className="guide-clear" onClick={()=>onSettings(s=>({...s,guide:undefined,guideName:undefined}))}>✕ Remove</button>
+            </div>
+          ) : (
+            <label className="guide-upload-btn">
+              ＋ Upload .md file
+              <input type="file" accept=".md,text/markdown,text/plain" style={{display:"none"}}
+                onChange={e=>{
+                  const f = e.target.files?.[0];
+                  if (!f) return;
+                  const reader = new FileReader();
+                  reader.onload = ev => onSettings(s=>({...s, guide: ev.target.result, guideName: f.name}));
+                  reader.readAsText(f);
+                  e.target.value="";
+                }}/>
+            </label>
+          )}
+        </div>
 
       </div>
     </div>
@@ -723,28 +1102,70 @@ function RightPanel({ open, onClose, settings, getDraft, chatHistory, setChatHis
     if (!text||thinking||!hasApi) return;
     setInput("");
 
-    const sysPmt   = buildSystemPrompt(getDraft());
+    const sysPmt   = buildSystemPrompt(getDraft(), settings);
     const userMsg  = {role:"user",content:text};
     const nextHist = [...chatHistory, userMsg];
     setChatHistory(nextHist);
     setThink(true);
 
+    const body = {
+      model: settings.selectedModel,
+      messages: [{role:"system",content:sysPmt},...nextHist],
+      max_tokens: settings.proxyMaxTokens || 1024,
+      stream: !!settings.proxyStream,
+    };
+    if (settings.proxyTemp    != null) body.temperature          = settings.proxyTemp;
+    if (settings.proxyTopP    != null) body.top_p                = settings.proxyTopP;
+    if (settings.proxyTopK    != null) body.top_k                = settings.proxyTopK;
+    if (settings.proxyFreqPen != null) body.frequency_penalty    = settings.proxyFreqPen;
+    if (settings.proxyPresPen != null) body.presence_penalty     = settings.proxyPresPen;
+    if (settings.proxyRepPen  != null) body.repetition_penalty   = settings.proxyRepPen;
+    if (settings.proxySeed    != null) body.seed                 = settings.proxySeed;
+
     try {
       const res = await fetch(`${CHUTES_BASE}/chat/completions`,{
         method:"POST",
         headers:{"Content-Type":"application/json","Authorization":`Bearer ${settings.apiKey}`},
-        body:JSON.stringify({
-          model:settings.selectedModel,
-          messages:[{role:"system",content:sysPmt},...nextHist],
-          max_tokens:1024, stream:false
-        })
+        body:JSON.stringify(body)
       });
       if (!res.ok) { const t=await res.text(); throw new Error(`HTTP ${res.status}: ${t}`); }
-      const data = await res.json();
-      const reply = data.choices?.[0]?.message?.content || "(empty response)";
-      setChatHistory([...nextHist,{role:"assistant",content:reply}]);
+
+      if (settings.proxyStream) {
+        const reader = res.body.getReader();
+        const dec    = new TextDecoder();
+        let buf = "", reply = "";
+        setChatHistory([...nextHist,{role:"assistant",content:""}]);
+        setThink(false);
+        while (true) {
+          const {done,value} = await reader.read();
+          if (done) break;
+          buf += dec.decode(value, {stream:true});
+          const lines = buf.split("\n");
+          buf = lines.pop();
+          for (const line of lines) {
+            const l = line.trim();
+            if (!l || l==="data: [DONE]") continue;
+            if (l.startsWith("data: ")) {
+              try {
+                const chunk = JSON.parse(l.slice(6));
+                const delta = chunk.choices?.[0]?.delta?.content || "";
+                reply += delta;
+                setChatHistory(h=>{
+                  const next=[...h];
+                  next[next.length-1]={role:"assistant",content:reply};
+                  return next;
+                });
+              } catch{}
+            }
+          }
+        }
+      } else {
+        const data  = await res.json();
+        const reply = data.choices?.[0]?.message?.content || "(empty response)";
+        setChatHistory([...nextHist,{role:"assistant",content:reply}]);
+      }
     } catch(e) {
-      setChatHistory([...nextHist,{role:"assistant",content:`⚠ Error: ${e.message}`}]);
+      setChatHistory(h=>[...nextHist,{role:"assistant",content:`⚠ Error: ${e.message}`}]);
     } finally { setThink(false); }
   };
 
@@ -879,8 +1300,18 @@ function PreviewModal({ bot, onClose, onEdit, onDelete }) {
 /* ═══════════════════════════════
    BOT EDITOR
 ═══════════════════════════════ */
+function SavedToast() {
+  return (
+    <div className="saved-toast">
+      <span className="saved-ink">Saved</span>
+      <span className="saved-text">Saved.</span>
+    </div>
+  );
+}
+
 function BotEditor({ bot, onSave, onBack, onDraftChange, dark, onToggle, onSettings, onChat, chatOpen }) {
   const [draft,setDraft] = useState(()=>JSON.parse(JSON.stringify(bot)));
+  const [toastKey,setToastKey] = useState(null);
 
   const pSc  = (k,v)   => setDraft(d=>({...d,scenario:{...d.scenario,[k]:v}}));
   const pCh  = (id,fn) => setDraft(d=>({...d,characters:d.characters.map(c=>c.id===id?fn(c):c)}));
@@ -889,8 +1320,20 @@ function BotEditor({ bot, onSave, onBack, onDraftChange, dark, onToggle, onSetti
 
   useEffect(()=>{ if(onDraftChange) onDraftChange(draft); },[draft]);
 
+  const handleSave = () => {
+    onSave(draft);
+    setToastKey(k => (k||0) + 1);
+  };
+
+  useEffect(()=>{
+    const onKey = e => { if((e.ctrlKey||e.metaKey)&&e.key==="s"){ e.preventDefault(); handleSave(); } };
+    window.addEventListener("keydown",onKey);
+    return ()=>window.removeEventListener("keydown",onKey);
+  },[draft]);
+
   return (
     <div className="editor">
+      {toastKey && <SavedToast key={toastKey} />}
       <div className="topbar">
         <button className="btn-back" onClick={onBack}>← Back</button>
         <input className="title-inp" placeholder="Scenario title…"
@@ -898,7 +1341,7 @@ function BotEditor({ bot, onSave, onBack, onDraftChange, dark, onToggle, onSetti
         <button className="btn-topbar-icon" onClick={onSettings} title="Settings">⚙</button>
         <button className="btn-topbar-icon" onClick={onToggle} title="Toggle theme">{dark?"☀":"☾"}</button>
         <button className={`btn-topbar-text${chatOpen?" active":""}`} onClick={onChat}>✦ Assistant</button>
-        <button className="btn-save" onClick={()=>onSave(draft)}>Save</button>
+        <button className="btn-save" onClick={handleSave}>Save</button>
       </div>
       <div className="ebody">
         <div className="esec">
@@ -917,7 +1360,7 @@ function BotEditor({ bot, onSave, onBack, onDraftChange, dark, onToggle, onSetti
         <div className="esec">
           <div className="estitle">Scenario</div>
           <ScenarioSection scenario={draft.scenario} characters={draft.characters}
-            onSc={pSc} onDyn={(id,v)=>pCh(id,c=>({...c,dynamic:v}))} />
+            onSc={pSc} onDynamics={v=>setDraft(d=>({...d,scenario:{...d.scenario,dynamics:v}}))} />
         </div>
         <div className="esec">
           <div className="estitle">Rules</div>
@@ -998,11 +1441,26 @@ function PersonalityPicker({ selected, onChange }) {
 
 /* ═══ BACKSTORY LIST ═══ */
 function BackstoryList({ entries, onChange }) {
-  const dragIdx = useRef(null);
+  const dragIdx      = useRef(null);
   const [over,setOver] = useState(null);
+  const taRefs       = useRef({});
+  const pendingFocus = useRef(null);
+
   const upd = (id,t) => onChange(entries.map(e=>e.id===id?{...e,text:t}:e));
-  const add = () => onChange([...entries,{id:uid(),text:""}]);
+  const add = () => {
+    const newId = uid();
+    pendingFocus.current = newId;
+    onChange([...entries,{id:newId,text:""}]);
+  };
   const rm  = id => { if(entries.length>1) onChange(entries.filter(e=>e.id!==id)); };
+
+  useEffect(() => {
+    if (pendingFocus.current && taRefs.current[pendingFocus.current]) {
+      taRefs.current[pendingFocus.current].focus();
+      pendingFocus.current = null;
+    }
+  });
+
   return (
     <div>
       <div className="bslist">
@@ -1014,6 +1472,7 @@ function BackstoryList({ entries, onChange }) {
             onDragEnd={()=>{dragIdx.current=null;setOver(null);}}>
             <span className="bsdrag">⠿</span>
             <textarea className="bsta" rows={2} placeholder={`Entry ${i+1}…`}
+              ref={el=>{ if(el) taRefs.current[e.id]=el; else delete taRefs.current[e.id]; }}
               value={e.text} onChange={ev=>upd(e.id,ev.target.value)}
               onKeyDown={ev=>{if(ev.key==="Enter"&&!ev.shiftKey){ev.preventDefault();add();}}}/>
             <button className="bsrm" onClick={()=>rm(e.id)}>✕</button>
@@ -1025,8 +1484,46 @@ function BackstoryList({ entries, onChange }) {
   );
 }
 
+/* ═══ DYNAMICS EDITOR ═══ */
+function DynamicsEditor({ dynamics, characters, onChange }) {
+  const charOptions = [
+    ...characters.map((c,i) => c.name||`Character ${i+1}`),
+    "{{user}}"
+  ];
+  const firstOpt  = charOptions[0] || "Character 1";
+  const secondOpt = charOptions[1] || "{{user}}";
+
+  const add = () => onChange([...dynamics, {id:uid(), charA:firstOpt, charB:secondOpt, description:""}]);
+  const upd = (id,k,v) => onChange(dynamics.map(d=>d.id===id?{...d,[k]:v}:d));
+  const rm  = id => onChange(dynamics.filter(d=>d.id!==id));
+
+  return (
+    <div className="scf sp">
+      <div className="dyn-list">
+        {dynamics.map(d=>(
+          <div key={d.id} className="dyn-entry">
+            <div className="dyn-pair">
+              <select className="dyn-sel" value={d.charA} onChange={e=>upd(d.id,"charA",e.target.value)}>
+                {charOptions.map(o=><option key={o} value={o}>{o}</option>)}
+              </select>
+              <span className="dyn-arrow">↔</span>
+              <select className="dyn-sel" value={d.charB} onChange={e=>upd(d.id,"charB",e.target.value)}>
+                {charOptions.map(o=><option key={o} value={o}>{o}</option>)}
+              </select>
+              <button className="dyn-rm" onClick={()=>rm(d.id)}>✕</button>
+            </div>
+            <textarea className="fta" rows={2} placeholder="Describe their dynamic…"
+              value={d.description} onChange={e=>upd(d.id,"description",e.target.value)}/>
+          </div>
+        ))}
+      </div>
+      <button className="gadd" onClick={add}>＋ Add Dynamic</button>
+    </div>
+  );
+}
+
 /* ═══ SCENARIO SECTION ═══ */
-function ScenarioSection({ scenario, characters, onSc, onDyn }) {
+function ScenarioSection({ scenario, characters, onSc, onDynamics }) {
   const inp = (lbl,k,ph="") => (
     <div className="scf"><div className="flbl">{lbl}</div>
       <input className="finp" placeholder={ph} value={scenario[k]||""} onChange={e=>onSc(k,e.target.value)}/></div>
@@ -1044,17 +1541,9 @@ function ScenarioSection({ scenario, characters, onSc, onDyn }) {
         <div style={{gridColumn:"1/-1"}}/>
         {txa("Premise","premise","Describe the core premise of the scenario…")}
         <div className="scsub">Character Dynamics</div>
-        {characters.map((c,i)=>(
-          <div className="scf sp" key={c.id}>
-            <div className="flbl">{c.name||`Character ${i+1}`} and {"{{user}}"} Dynamic</div>
-            <textarea className="fta" rows={2}
-              placeholder={`How does ${c.name||"this character"} relate to {{user}}?`}
-              value={c.dynamic||""} onChange={e=>onDyn(c.id,e.target.value)}/>
-          </div>
-        ))}
-        <div className="scsub">Supporting Cast &amp; Opening</div>
+        <DynamicsEditor dynamics={scenario.dynamics||[]} characters={characters} onChange={onDynamics}/>
+        <div className="scsub">Supporting Cast</div>
         {txa("Important Supporting Characters","importantSupportingCharacters","List supporting characters and their roles…")}
-        {txa("Starting Situation (in intro message 1)","startingSituation","Describe the opening scene or situation…")}
       </div>
     </div>
   );
