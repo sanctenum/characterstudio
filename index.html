@@ -7,6 +7,59 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <!-- Firebase -->
+  <script type="module" id="firebase-init">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, collection, getDocs, deleteDoc, writeBatch }
+      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCiT2WzI9myM9wbsN2_FEV_HzK2LC1WNfs",
+      authDomain: "character-studio-15bf7.firebaseapp.com",
+      projectId: "character-studio-15bf7",
+      storageBucket: "character-studio-15bf7.firebasestorage.app",
+      messagingSenderId: "120657598965",
+      appId: "1:120657598965:web:9aac731e87a09e7ab528bc"
+    };
+
+    const app      = initializeApp(firebaseConfig);
+    const auth     = getAuth(app);
+    const db       = getFirestore(app);
+    const provider = new GoogleAuthProvider();
+
+    window.__firebase = {
+      auth, db, provider,
+      signIn:  () => signInWithPopup(auth, provider),
+      signOut: () => signOut(auth),
+      onAuth:  (cb) => onAuthStateChanged(auth, cb),
+      // Firestore helpers
+      userDoc: (uid, path) => doc(db, "users", uid, ...path.split("/")),
+      setUserDoc: async (uid, path, data) => {
+        await setDoc(doc(db, "users", uid, ...path.split("/")), data, { merge: true });
+      },
+      getUserDoc: async (uid, path) => {
+        const snap = await getDoc(doc(db, "users", uid, ...path.split("/")));
+        return snap.exists() ? snap.data() : null;
+      },
+      getUserCollection: async (uid, col) => {
+        const snap = await getDocs(collection(db, "users", uid, col));
+        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      },
+      saveBot: async (uid, bot) => {
+        await setDoc(doc(db, "users", uid, "bots", bot.id), bot);
+      },
+      deleteBot: async (uid, botId) => {
+        await deleteDoc(doc(db, "users", uid, "bots", botId));
+      },
+      saveBots: async (uid, bots) => {
+        const batch = writeBatch(db);
+        bots.forEach(b => batch.set(doc(db, "users", uid, "bots", b.id), b));
+        await batch.commit();
+      },
+    };
+  </script>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;1,400&family=Courier+Prime:ital@0;1&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -174,6 +227,7 @@
       font-size:0.95rem; color:var(--ink-mid);
     }
     .btn-topbar-icon:hover { border-color:var(--ink); color:var(--ink); }
+    .btn-topbar-icon.active { background:var(--ink); color:var(--paper); border-color:var(--ink); }
     .btn-topbar-text {
       height:34px; padding:0 12px; flex-shrink:0;
       background:var(--paper-dark); border:1.5px solid var(--ink-faint);
@@ -183,7 +237,102 @@
     }
     .btn-topbar-text:hover { border-color:var(--ink); color:var(--ink); }
     .btn-topbar-text.active { background:var(--ink); color:var(--paper); border-color:var(--ink); }
+    .btn-topbar-text.ok { background:#2c6e3a; color:var(--paper); border-color:#2c6e3a; }
 
+    /* ── Auth / User button ── */
+    .auth-btn {
+      font-family:'Courier Prime',monospace; font-size:0.72rem; text-transform:uppercase;
+      letter-spacing:1px; background:var(--ink); color:var(--paper);
+      border:none; padding:8px 14px; cursor:pointer; display:flex;
+      align-items:center; gap:8px; white-space:nowrap; flex-shrink:0;
+    }
+    .auth-btn:hover { background:var(--red); }
+    .auth-btn.signed-in { background:var(--paper-dark); color:var(--ink); border:1.5px solid var(--ink-faint); }
+    .auth-btn.signed-in:hover { border-color:var(--red); color:var(--red); }
+    .auth-avatar {
+      width:22px; height:22px; border-radius:50%; object-fit:cover;
+      border:1.5px solid var(--ink-faint); flex-shrink:0;
+    }
+    .auth-name { max-width:100px; overflow:hidden; text-overflow:ellipsis; }
+    .auth-sync-dot {
+      width:6px; height:6px; border-radius:50%; background:var(--red);
+      flex-shrink:0; animation:pulse 1.4s infinite;
+    }
+    .auth-sync-dot.ok { background:#2c6e3a; animation:none; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .file-menu-wrap { position:relative; flex-shrink:0; }
+    .file-dropdown {
+      position:absolute; top:calc(100% + 6px); left:0;
+      background:var(--paper); border:1.5px solid var(--ink);
+      box-shadow:4px 5px 0 var(--shadow);
+      min-width:140px; z-index:600;
+      display:flex; flex-direction:column;
+      animation:oFade 0.1s ease;
+    }
+    .file-dropdown-item {
+      font-family:'Courier Prime',monospace; font-size:0.75rem;
+      text-transform:uppercase; letter-spacing:1px;
+      background:none; border:none; color:var(--ink);
+      padding:10px 14px; cursor:pointer; text-align:left;
+      display:flex; align-items:center; gap:8px;
+      border-bottom:1px dashed var(--paper-line);
+    }
+    .file-dropdown-item:last-child { border-bottom:none; }
+    .file-dropdown-item:hover { background:var(--paper-dark); color:var(--red); }
+
+    /* ── Import modal ── */
+    .import-overlay {
+      position:fixed; inset:0; background:rgba(8,6,2,0.72);
+      display:flex; align-items:center; justify-content:center;
+      z-index:900; padding:20px; animation:oFade 0.14s ease;
+    }
+    .import-modal {
+      background:var(--paper); width:100%; max-width:460px;
+      box-shadow:10px 14px 0 var(--shadow), 0 0 0 1px var(--paper-dark);
+      animation:mSlide 0.18s ease;
+    }
+    .import-tape { height:10px; background:var(--tape); border-bottom:1px solid rgba(160,130,30,0.2); }
+    .import-body { padding:24px 26px 22px; }
+    .import-title {
+      font-family:'Playfair Display',serif; font-size:1.3rem; font-weight:700;
+      margin-bottom:4px;
+    }
+    .import-sub {
+      font-family:'Courier Prime',monospace; font-size:0.65rem;
+      text-transform:uppercase; letter-spacing:1.5px; color:var(--ink-faint);
+      margin-bottom:20px;
+    }
+    .import-drop {
+      border:2px dashed var(--paper-line); padding:36px 20px;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:10px; cursor:pointer; transition:border-color 0.18s, background 0.18s;
+      text-align:center; margin-bottom:16px; position:relative;
+    }
+    .import-drop.drag-over { border-color:var(--red); background:var(--sc-bg); }
+    .import-drop-icon { font-size:2rem; color:var(--ink-faint); line-height:1; }
+    .import-drop-text {
+      font-family:'Courier Prime',monospace; font-size:0.72rem;
+      text-transform:uppercase; letter-spacing:1px; color:var(--ink-faint);
+    }
+    .import-drop-hint {
+      font-family:'Courier Prime',monospace; font-size:0.62rem;
+      color:var(--ink-faint); opacity:0.7;
+    }
+    .import-file-input { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; }
+    .import-error {
+      font-family:'Courier Prime',monospace; font-size:0.7rem; color:var(--red);
+      margin-bottom:10px; padding:8px 10px; border:1px solid var(--red);
+      background:rgba(139,46,26,0.06);
+    }
+    .import-actions { display:flex; gap:10px; justify-content:flex-end; }
+    .import-close {
+      position:absolute; top:14px; right:14px;
+      background:none; border:none; cursor:pointer; font-size:1rem;
+      color:var(--ink-faint);
+    }
+    .import-close:hover { color:var(--ink); }
+
+    .ebody-wrap { transition: padding 0.32s cubic-bezier(0.4,0,0.2,1); }
     .ebody { max-width:800px; margin:0 auto; padding:36px 24px 140px; }
     .esec  { margin-bottom:44px; }
     .estitle { font-family:'Playfair Display',serif; font-size:1.35rem; font-weight:700; border-bottom:2px solid var(--ink); padding-bottom:9px; margin-bottom:20px; display:flex; align-items:baseline; justify-content:space-between; }
@@ -268,9 +417,9 @@
       display:none;
     }
     .left-panel {
-      position:fixed; top:0; left:0; height:100vh; width:330px;
+      position:fixed; top:var(--topbar-h,57px); left:0; height:calc(100vh - var(--topbar-h,57px)); width:330px;
       background:var(--panel-bg); border-right:2px solid var(--paper-line);
-      z-index:500; display:flex; flex-direction:column;
+      z-index:150; display:flex; flex-direction:column;
       transform:translateX(-100%);
       box-shadow:4px 0 24px var(--shadow);
       transition: transform 0.32s cubic-bezier(0.4,0,0.2,1), background-color 0.4s ease, border-color 0.4s ease;
@@ -328,14 +477,40 @@
        RIGHT PANEL — Chat
     ════════════════════════════════ */
     .right-panel {
-      position:fixed; top:0; right:0; height:100vh; width:370px;
+      position:fixed; top:var(--topbar-h,57px); right:0; height:calc(100vh - var(--topbar-h,57px)); width:370px;
       background:var(--panel-bg); border-left:2px solid var(--paper-line);
-      z-index:500; display:flex; flex-direction:column;
+      z-index:150; display:flex; flex-direction:column;
       transform:translateX(100%);
       box-shadow:-4px 0 24px var(--shadow);
       transition: transform 0.32s cubic-bezier(0.4,0,0.2,1), background-color 0.4s ease, border-color 0.4s ease;
     }
     .right-panel.open { transform:translateX(0); }
+    .right-panel.fullscreen {
+      width:100vw !important; height:calc(100vh - var(--topbar-h,57px)); top:var(--topbar-h,57px); right:0;
+      border-left:none;
+    }
+
+    /* drag handle on left edge of panel */
+    .rp-resize-handle {
+      position:absolute; left:0; top:0; width:5px; height:100%;
+      cursor:ew-resize; z-index:10; background:transparent;
+      transition: background 0.2s;
+      user-select:none;
+    }
+    .rp-resize-handle:hover,
+    .rp-resize-handle.dragging {
+      background: var(--red);
+      opacity:0.5;
+    }
+    .right-panel.fullscreen .rp-resize-handle { display:none; }
+
+    /* fullscreen button in header */
+    .rp-fullscreen-btn {
+      background:none; border:none; color:var(--paper); cursor:pointer;
+      font-size:0.85rem; padding:3px 6px; line-height:1; flex-shrink:0;
+      opacity:0.75;
+    }
+    .rp-fullscreen-btn:hover { opacity:1; color:#f0f0d0; }
 
     .rp-head {
       background:var(--ink); color:var(--paper);
@@ -493,15 +668,15 @@
     .saved-toast {
       position: fixed;
       right: 0;
-      top: 50%;
+      top: calc(var(--topbar-h, 57px) + 10px);
       z-index: 1000;
       background: var(--ink);
       color: var(--paper);
-      padding: 16px 32px 16px 22px;
+      padding: 12px 28px 12px 18px;
       display: flex;
       align-items: center;
       gap: 10px;
-      box-shadow: -5px 0 28px var(--shadow);
+      box-shadow: -5px 4px 28px var(--shadow);
       border-left: 3px solid var(--red);
       animation: toastSlide 3.2s cubic-bezier(0.4,0,0.2,1) forwards;
       pointer-events: none;
@@ -526,10 +701,10 @@
       line-height: 1;
     }
     @keyframes toastSlide {
-      0%   { transform: translateY(-50%) translateX(110%); }
-      14%  { transform: translateY(-50%) translateX(0%);   }
-      78%  { transform: translateY(-50%) translateX(0%);   }
-      100% { transform: translateY(-50%) translateX(110%); }
+      0%   { transform: translateX(110%); }
+      14%  { transform: translateX(0%);   }
+      78%  { transform: translateX(0%);   }
+      100% { transform: translateX(110%); }
     }
     @keyframes writeReveal {
       from { clip-path: inset(0 100% 0 0); }
@@ -848,12 +1023,97 @@ function useTheme() {
 }
 
 /* ═══════════════════════════════
+   FIREBASE AUTH HOOK
+═══════════════════════════════ */
+function useAuth() {
+  const [user, setUser]     = useState(null);   // null = loading, false = signed out
+  const [ready, setReady]   = useState(false);
+
+  useEffect(() => {
+    const fb = window.__firebase;
+    if (!fb) { setReady(true); return; }
+    const unsub = fb.onAuth(u => { setUser(u || false); setReady(true); });
+    return unsub;
+  }, []);
+
+  const signIn  = useCallback(() => window.__firebase?.signIn().catch(console.error), []);
+  const signOut = useCallback(() => window.__firebase?.signOut(), []);
+
+  return { user, ready, signIn, signOut };
+}
+
+/* ── Firestore sync helpers ── */
+async function fsLoadBots(uid) {
+  try {
+    const fb = window.__firebase;
+    if (!fb || !uid) return null;
+    return await fb.getUserCollection(uid, "bots");
+  } catch { return null; }
+}
+async function fsSaveBot(uid, bot) {
+  try { await window.__firebase?.saveBot(uid, bot); } catch(e) { console.error(e); }
+}
+async function fsDeleteBot(uid, botId) {
+  try { await window.__firebase?.deleteBot(uid, botId); } catch(e) { console.error(e); }
+}
+async function fsLoadSettings(uid) {
+  try {
+    const fb = window.__firebase;
+    if (!fb || !uid) return null;
+    return await fb.getUserDoc(uid, "meta/settings");
+  } catch { return null; }
+}
+async function fsSaveSettings(uid, settings) {
+  try { await window.__firebase?.setUserDoc(uid, "meta/settings", settings); } catch(e) { console.error(e); }
+}
+
+/* ── User button (topbar + dashboard) ── */
+function UserButton({ user, onSignIn, onSignOut, syncing }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const h = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, [open]);
+
+  if (!user) return (
+    <button className="auth-btn" onClick={onSignIn} title="Sign in with Google">
+      <span>G</span> Sign in
+    </button>
+  );
+
+  return (
+    <div style={{position:"relative", flexShrink:0}} ref={ref}>
+      <button className="auth-btn signed-in" onClick={()=>setOpen(o=>!o)}>
+        {user.photoURL
+          ? <img className="auth-avatar" src={user.photoURL} alt=""/>
+          : <span>👤</span>}
+        <span className="auth-name">{user.displayName?.split(" ")[0] || "Account"}</span>
+        <span className={`auth-sync-dot${syncing===false?" ok":""}`} title={syncing?"Syncing…":"Synced"}/>
+      </button>
+      {open && (
+        <div className="file-dropdown" style={{right:0, left:"auto", minWidth:160}}>
+          <div className="file-dropdown-item" style={{cursor:"default", opacity:0.6, fontSize:"0.65rem"}}>
+            {user.email}
+          </div>
+          <button className="file-dropdown-item" onClick={()=>{onSignOut();setOpen(false);}}>
+            <span>⎋</span> Sign out
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════
    APP
 ═══════════════════════════════ */
 function App() {
   useEffect(() => {
     installUserAutocorrect();
-    // clean up any corrupted chat entries from previous sessions
     try {
       const raw = JSON.parse(localStorage.getItem("cs_chats") || "{}");
       if (typeof raw === "object" && !Array.isArray(raw) && raw !== null) {
@@ -863,6 +1123,10 @@ function App() {
       }
     } catch { try { localStorage.removeItem("cs_chats"); } catch {} }
   }, []);
+
+  const { user, ready, signIn, signOut } = useAuth();
+  const uid = user?.uid || null;
+
   const [bots,setBots]               = useState(loadBots);
   const [view,setView]               = useState("dash");
   const [editBot,setEditBot]         = useState(null);
@@ -870,16 +1134,62 @@ function App() {
   const [copyOk,setCopyOk]           = useState(false);
   const [leftOpen,setLeftOpen]       = useState(false);
   const [rightOpen,setRightOpen]     = useState(false);
+  const [rightPanelWidth,setRightPanelWidth] = useState(370);
   const [settings,setSettings]       = useState(loadSettings);
   const [models,setModels]           = useState([]);
   const [modLoading,setModLoading]   = useState(false);
   const [modError,setModError]       = useState("");
   const [chats,setChats]             = useState(loadChats);
+  const [syncing,setSyncing]         = useState(null); // null=idle, true=syncing, false=done
   const { dark, toggle }             = useTheme();
   const liveDraftRef                 = useRef(null);
+  const prevUidRef                   = useRef(null);
 
-  useEffect(()=>{ try{saveBots(bots);}catch{} },[bots]);
-  useEffect(()=>{ try{saveSettings(settings);}catch{} },[settings]);
+  /* ── Load from Firestore when user signs in ── */
+  useEffect(() => {
+    if (!uid) {
+      // signed out — fall back to localStorage
+      if (prevUidRef.current) {
+        setBots(loadBots());
+        setSettings(loadSettings());
+      }
+      prevUidRef.current = null;
+      return;
+    }
+    if (prevUidRef.current === uid) return;
+    prevUidRef.current = uid;
+    setSyncing(true);
+    Promise.all([fsLoadBots(uid), fsLoadSettings(uid)]).then(([fsBots, fsSettings]) => {
+      if (fsBots && fsBots.length > 0) setBots(fsBots);
+      if (fsSettings) setSettings(s => ({ ...s, ...fsSettings }));
+      setSyncing(false);
+    }).catch(() => setSyncing(false));
+  }, [uid]);
+
+  /* ── Sync bots to Firestore (debounced) ── */
+  const syncBotsTimer = useRef(null);
+  useEffect(() => {
+    try { saveBots(bots); } catch {}
+    if (!uid) return;
+    clearTimeout(syncBotsTimer.current);
+    setSyncing(true);
+    syncBotsTimer.current = setTimeout(async () => {
+      try {
+        await Promise.all(bots.map(b => fsSaveBot(uid, b)));
+        setSyncing(false);
+      } catch { setSyncing(false); }
+    }, 1200);
+  }, [bots, uid]);
+
+  /* ── Sync settings to Firestore (debounced) ── */
+  const syncSettingsTimer = useRef(null);
+  useEffect(() => {
+    try { saveSettings(settings); } catch {}
+    if (!uid) return;
+    clearTimeout(syncSettingsTimer.current);
+    syncSettingsTimer.current = setTimeout(() => fsSaveSettings(uid, settings), 1500);
+  }, [settings, uid]);
+
   useEffect(()=>{ try{saveChats(chats);}catch{} },[chats]);
 
   /* fetch Chutes model list */
@@ -891,13 +1201,9 @@ function App() {
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const d = await r.json();
       const raw = d.data || d.models || (Array.isArray(d)?d:[]);
-      setModels(raw.map(m=>({
-        id: m.id||m.name,
-        pricing: m.pricing||null
-      })));
-    } catch(e) {
-      setModError("Failed: "+e.message);
-    } finally { setModLoading(false); }
+      setModels(raw.map(m=>({ id: m.id||m.name, pricing: m.pricing||null })));
+    } catch(e) { setModError("Failed: "+e.message); }
+    finally { setModLoading(false); }
   },[]);
 
   useEffect(()=>{ if(settings.apiKey) fetchModels(settings.apiKey); },[settings.apiKey]);
@@ -906,8 +1212,14 @@ function App() {
   const goEdit = b  => { setPreviewBot(null); setEditBot(JSON.parse(JSON.stringify(b))); setView("editor"); };
   const goBack = () => { setView("dash"); setEditBot(null); liveDraftRef.current=null; setRightOpen(false); };
 
-  const handleSave   = b => { setBots(p=>{const i=p.findIndex(x=>x.id===b.id);if(i>=0){const n=[...p];n[i]=b;return n;}return[...p,b];}); };
-  const handleDelete = id=> { setBots(p=>p.filter(b=>b.id!==id)); setPreviewBot(null); };
+  const handleSave = b => {
+    setBots(p=>{const i=p.findIndex(x=>x.id===b.id);if(i>=0){const n=[...p];n[i]=b;return n;}return[...p,b];});
+  };
+  const handleDelete = id => {
+    setBots(p=>p.filter(b=>b.id!==id));
+    if (uid) fsDeleteBot(uid, id);
+    setPreviewBot(null);
+  };
 
   const handleCopy = () => {
     const data = liveDraftRef.current || editBot;
@@ -915,18 +1227,33 @@ function App() {
     navigator.clipboard.writeText(formatDocx(data)).then(()=>{ setCopyOk(true); setTimeout(()=>setCopyOk(false),2200); });
   };
 
-  /* per-bot chat history */
-  const botId        = editBot?.id;
-  const chatHistory  = botId ? (Array.isArray(chats[botId]) ? chats[botId] : []) : [];
-  const setChatHist  = msgs => { if(!botId)return; const safe = Array.isArray(msgs)?msgs:[]; setChats(p=>({...p,[botId]:safe})); };
-  const getDraft     = () => liveDraftRef.current || editBot;
+  const botId       = editBot?.id;
+  const chatHistory = botId ? (Array.isArray(chats[botId]) ? chats[botId] : []) : [];
+  const setChatHist = msgs => { if(!botId)return; const safe=Array.isArray(msgs)?msgs:[]; setChats(p=>({...p,[botId]:safe})); };
+  const getDraft    = () => liveDraftRef.current || editBot;
+
+  const handleImport = importedBots => {
+    setBots(prev => [...prev, ...importedBots]);
+    if (importedBots.length > 0) {
+      setEditBot(JSON.parse(JSON.stringify(importedBots[0])));
+      liveDraftRef.current = null;
+      setView("editor");
+    }
+  };
+
+  const userBtn = (
+    <UserButton user={user} onSignIn={signIn} onSignOut={signOut} syncing={syncing}/>
+  );
+
+  if (!ready) return (
+    <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Courier Prime',monospace",fontSize:"0.8rem",color:"var(--ink-faint)",textTransform:"uppercase",letterSpacing:"2px"}}>
+      Loading…
+    </div>
+  );
 
   return (
     <div>
-      {/* backdrop — visual dim only, no click-to-close */}
-      <div
-        className={`panel-backdrop${leftOpen||rightOpen?" visible":""}`}
-      />
+      <div className={`panel-backdrop${leftOpen||rightOpen?" visible":""}`}/>
 
       <LeftPanel
         open={leftOpen} onClose={()=>setLeftOpen(false)}
@@ -938,22 +1265,28 @@ function App() {
       {view==="editor" && (
         <RightPanel
           open={rightOpen} onClose={()=>setRightOpen(false)}
-          settings={settings}
-          getDraft={getDraft}
-          chatHistory={chatHistory}
-          setChatHistory={setChatHist}
+          settings={settings} getDraft={getDraft}
+          chatHistory={chatHistory} setChatHistory={setChatHist}
+          panelWidth={rightPanelWidth} onPanelWidthChange={setRightPanelWidth}
+          leftOpen={leftOpen}
         />
       )}
 
       {view==="dash"
         ? <Dashboard bots={bots} onNew={goNew} onPreview={setPreviewBot}
-            dark={dark} onToggle={toggle} onSettings={()=>setLeftOpen(true)} />
+            dark={dark} onToggle={toggle} onSettings={()=>setLeftOpen(true)}
+            userBtn={userBtn}/>
         : <BotEditor
             bot={editBot} onSave={handleSave} onBack={goBack}
             onDraftChange={d=>{liveDraftRef.current=d;}}
             dark={dark} onToggle={toggle}
-            onSettings={()=>setLeftOpen(true)}
+            onSettings={()=>setLeftOpen(o=>!o)} settingsOpen={leftOpen}
             onChat={()=>setRightOpen(o=>!o)} chatOpen={rightOpen}
+            rightPanelWidth={rightOpen ? rightPanelWidth : 0}
+            leftPanelWidth={leftOpen ? 330 : 0}
+            onCopy={handleCopy} copyOk={copyOk}
+            onImport={handleImport}
+            userBtn={userBtn}
           />
       }
 
@@ -963,15 +1296,6 @@ function App() {
           onEdit={()=>goEdit(previewBot)}
           onDelete={handleDelete}
         />
-      )}
-
-      {view==="editor" && (
-        <div className="fab-cluster">
-          <button className={`fab-copy${copyOk?" ok":""}`} onClick={handleCopy}>
-            <span className="fab-copy-icon">{copyOk?"✓":"⎘"}</span>
-            {copyOk?"Copied!":"Copy All"}
-          </button>
-        </div>
       )}
     </div>
   );
@@ -1220,13 +1544,66 @@ function ThinkBox({ text }) {
   );
 }
 
-function RightPanel({ open, onClose, settings, getDraft, chatHistory, setChatHistory }) {
-  const [input,setInput]       = useState("");
-  const [isLoading,setLoading] = useState(false);
+function RightPanel({ open, onClose, settings, getDraft, chatHistory, setChatHistory, panelWidth, onPanelWidthChange, leftOpen }) {
+  const [input,setInput]         = useState("");
+  const [isLoading,setLoading]   = useState(false);
   const [showThink,setShowThink] = useState(false);
-  const bottomRef              = useRef(null);
+  const [isFullscreen,setFs]     = useState(false);
+  const [lastWidth,setLastWidth]  = useState(panelWidth);
+  const bottomRef  = useRef(null);
+  const panelRef   = useRef(null);
+  const handleRef  = useRef(null);
+
+  // LEFT_PANEL_WIDTH: 330px when left panel is open
+  const LEFT_W = leftOpen ? 330 : 0;
+  // Minimum visible content width for the editor (ebody max-width is 800, we keep at least this)
+  const MIN_CONTENT = 480;
 
   useEffect(()=>{ if(bottomRef.current) bottomRef.current.scrollIntoView({behavior:"smooth"}); },[chatHistory,isLoading]);
+
+  // When leftOpen changes, clamp rightPanelWidth so content area stays visible
+  useEffect(() => {
+    const maxW = window.innerWidth - LEFT_W - MIN_CONTENT;
+    if (panelWidth > maxW && maxW > 0) {
+      onPanelWidthChange(Math.max(280, maxW));
+    }
+  }, [leftOpen]);
+
+  /* ── Resize logic ── */
+  const onResizeMouseDown = useCallback(e => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startW = panelRef.current ? panelRef.current.offsetWidth : panelWidth;
+
+    if (handleRef.current) handleRef.current.classList.add("dragging");
+
+    const onMove = mv => {
+      const leftW = leftOpen ? 330 : 0;
+      const maxW  = window.innerWidth - leftW - MIN_CONTENT;
+      const delta = startX - mv.clientX;
+      const newW  = Math.max(280, Math.min(maxW, startW + delta));
+      onPanelWidthChange(newW);
+      setLastWidth(newW);
+    };
+    const onUp = () => {
+      if (handleRef.current) handleRef.current.classList.remove("dragging");
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup",   onUp);
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup",   onUp);
+  }, [panelWidth, leftOpen]);
+
+  const toggleFullscreen = () => {
+    setFs(fs => {
+      if (!fs) {
+        setLastWidth(panelWidth);
+      } else {
+        onPanelWidthChange(lastWidth);
+      }
+      return !fs;
+    });
+  };
 
   const hasApi = !!(settings.apiKey && settings.selectedModel);
   const draft  = getDraft();
@@ -1321,10 +1698,30 @@ function RightPanel({ open, onClose, settings, getDraft, chatHistory, setChatHis
   const modelShort = settings.selectedModel?.split("/").pop() || settings.selectedModel || "—";
 
   return (
-    <div className={`right-panel${open?" open":""}`} onClick={e=>e.stopPropagation()}>
+    <div
+      ref={panelRef}
+      className={`right-panel${open?" open":""}${isFullscreen?" fullscreen":""}`}
+      style={!isFullscreen ? {width: panelWidth + "px"} : undefined}
+      onClick={e=>e.stopPropagation()}
+    >
+      {/* drag-to-resize handle */}
+      {!isFullscreen && (
+        <div
+          ref={handleRef}
+          className="rp-resize-handle"
+          onMouseDown={onResizeMouseDown}
+          title="Drag to resize"
+        />
+      )}
       <div className="rp-head">
         <h2>✦ Assistant</h2>
         <span className={`rp-badge${draft?" on":" off"}`}>{draft?"Memory Live":"No Context"}</span>
+        <button className="rp-fullscreen-btn" onClick={toggleFullscreen} title={isFullscreen?"Exit fullscreen":"Fullscreen"}>
+          {isFullscreen ? "⊡" : "⊡"}
+          <span style={{fontSize:"0.65rem",marginLeft:"3px",fontFamily:"'Courier Prime',monospace",textTransform:"uppercase",letterSpacing:"0.5px"}}>
+            {isFullscreen ? "exit" : "full"}
+          </span>
+        </button>
         <button className="rp-x" onClick={onClose}>✕</button>
       </div>
 
@@ -1383,7 +1780,7 @@ function RightPanel({ open, onClose, settings, getDraft, chatHistory, setChatHis
 /* ═══════════════════════════════
    DASHBOARD
 ═══════════════════════════════ */
-function Dashboard({ bots, onNew, onPreview, dark, onToggle, onSettings }) {
+function Dashboard({ bots, onNew, onPreview, dark, onToggle, onSettings, userBtn }) {
   return (
     <div className="dashboard">
       <div className="dash-header">
@@ -1394,6 +1791,7 @@ function Dashboard({ bots, onNew, onPreview, dark, onToggle, onSettings }) {
         <div className="dash-actions">
           <button className="btn-dash-util" onClick={onSettings}>⚙ Settings</button>
           <button className="btn-dash-util" onClick={onToggle}>{dark?"☀ Light":"☾ Dark"}</button>
+          {userBtn}
           <button className="btn-new" onClick={onNew}>＋ New Character</button>
         </div>
       </div>
@@ -1456,6 +1854,142 @@ function PreviewModal({ bot, onClose, onEdit, onDelete }) {
 }
 
 /* ═══════════════════════════════
+   FILE MENU + IMPORT MODAL
+═══════════════════════════════ */
+function ImportModal({ onClose, onImport }) {
+  const [dragOver, setDragOver] = useState(false);
+  const [error, setError]       = useState("");
+
+  const processFile = file => {
+    if (!file) return;
+    if (!file.name.endsWith(".json") && file.type !== "application/json") {
+      setError("Please select a valid .json file.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        // Accept either a single bot object or an array of bots
+        const bots = Array.isArray(data) ? data : [data];
+        // Basic validation — each needs at least an id and characters array
+        const valid = bots.filter(b => b && typeof b === "object" && Array.isArray(b.characters));
+        if (valid.length === 0) { setError("No valid character data found in this file."); return; }
+        // Assign fresh IDs to avoid collisions
+        const imported = valid.map(b => ({
+          ...b,
+          id: uid(),
+          createdAt: b.createdAt || new Date().toISOString(),
+          characters: (b.characters||[]).map(c => ({...c, id: uid()})),
+          scenario: b.scenario || {},
+          rules: b.rules || [...DEFAULT_RULES],
+        }));
+        onImport(imported);
+        onClose();
+      } catch {
+        setError("Could not parse JSON. Make sure the file is valid.");
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const onDrop = e => {
+    e.preventDefault(); setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    processFile(file);
+  };
+
+  return (
+    <div className="import-overlay" onMouseDown={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="import-modal" onClick={e=>e.stopPropagation()}>
+        <div className="import-tape"/>
+        <button className="import-close" onClick={onClose}>✕</button>
+        <div className="import-body">
+          <div className="import-title">Import Characters</div>
+          <div className="import-sub">JSON file — single bot or array of bots</div>
+
+          <div
+            className={`import-drop${dragOver?" drag-over":""}`}
+            onDragOver={e=>{e.preventDefault();setDragOver(true);}}
+            onDragEnter={e=>{e.preventDefault();setDragOver(true);}}
+            onDragLeave={()=>setDragOver(false)}
+            onDrop={onDrop}
+          >
+            <div className="import-drop-icon">{dragOver ? "📂" : "📄"}</div>
+            <div className="import-drop-text">Drop your .json file here</div>
+            <div className="import-drop-hint">or click to browse</div>
+            <input
+              className="import-file-input"
+              type="file" accept=".json,application/json"
+              onChange={e=>{ processFile(e.target.files?.[0]); e.target.value=""; }}
+            />
+          </div>
+
+          {error && <div className="import-error">⚠ {error}</div>}
+
+          <div className="import-actions">
+            <button className="btn-a btn-dim" onClick={onClose}>Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FileMenu({ draft, onImport }) {
+  const [open, setOpen]         = useState(false);
+  const [showImport, setImport] = useState(false);
+  const wrapRef                 = useRef(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!open) return;
+    const handler = e => { if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  const exportJson = () => {
+    const data = JSON.stringify(draft, null, 2);
+    const blob  = new Blob([data], {type:"application/json"});
+    const url   = URL.createObjectURL(blob);
+    const a     = document.createElement("a");
+    a.href = url;
+    a.download = `${(draft.title||"character").replace(/[^a-z0-9]/gi,"_").toLowerCase()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setOpen(false);
+  };
+
+  return (
+    <>
+      <div className="file-menu-wrap" ref={wrapRef}>
+        <button
+          className={`btn-topbar-text${open?" active":""}`}
+          onClick={()=>setOpen(o=>!o)}
+        >
+          ⊞ File ▾
+        </button>
+        {open && (
+          <div className="file-dropdown">
+            <button className="file-dropdown-item" onClick={()=>{setImport(true);setOpen(false);}}>
+              <span>⬆</span> Import JSON
+            </button>
+            <button className="file-dropdown-item" onClick={exportJson}>
+              <span>⬇</span> Export JSON
+            </button>
+          </div>
+        )}
+      </div>
+
+      {showImport && (
+        <ImportModal onClose={()=>setImport(false)} onImport={onImport} />
+      )}
+    </>
+  );
+}
+
+/* ═══════════════════════════════
    BOT EDITOR
 ═══════════════════════════════ */
 function SavedToast() {
@@ -1467,9 +2001,23 @@ function SavedToast() {
   );
 }
 
-function BotEditor({ bot, onSave, onBack, onDraftChange, dark, onToggle, onSettings, onChat, chatOpen }) {
+function BotEditor({ bot, onSave, onBack, onDraftChange, dark, onToggle, onSettings, settingsOpen, onChat, chatOpen, rightPanelWidth, leftPanelWidth, onCopy, copyOk, onImport, userBtn }) {
   const [draft,setDraft] = useState(()=>JSON.parse(JSON.stringify(bot)));
   const [toastKey,setToastKey] = useState(null);
+  const topbarRef = useRef(null);
+
+  // Keep --topbar-h CSS variable in sync with actual topbar height
+  useEffect(() => {
+    const el = topbarRef.current;
+    if (!el) return;
+    const update = () => {
+      document.documentElement.style.setProperty('--topbar-h', el.offsetHeight + 'px');
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => { ro.disconnect(); document.documentElement.style.removeProperty('--topbar-h'); };
+  }, []);
 
   const pSc  = (k,v)   => setDraft(d=>({...d,scenario:{...d.scenario,[k]:v}}));
   const pCh  = (id,fn) => setDraft(d=>({...d,characters:d.characters.map(c=>c.id===id?fn(c):c)}));
@@ -1492,15 +2040,25 @@ function BotEditor({ bot, onSave, onBack, onDraftChange, dark, onToggle, onSetti
   return (
     <div className="editor">
       {toastKey && <SavedToast key={toastKey} />}
-      <div className="topbar">
+      <div className="topbar" ref={topbarRef}>
         <button className="btn-back" onClick={onBack}>← Back</button>
         <input className="title-inp" placeholder="Scenario title…"
           value={draft.title} onChange={e=>setDraft(d=>({...d,title:e.target.value}))} />
-        <button className="btn-topbar-icon" onClick={onSettings} title="Settings">⚙</button>
+        <button className={`btn-topbar-icon${settingsOpen?" active":""}`} onClick={onSettings} title="Settings">⚙</button>
         <button className="btn-topbar-icon" onClick={onToggle} title="Toggle theme">{dark?"☀":"☾"}</button>
+        <FileMenu draft={draft} onImport={onImport} />
         <button className={`btn-topbar-text${chatOpen?" active":""}`} onClick={onChat}>✦ Assistant</button>
+        <button className={`btn-topbar-text${copyOk?" ok":""}`} onClick={onCopy} title="Copy all to clipboard">
+          {copyOk ? "✓ Copied!" : "⎘ Copy All"}
+        </button>
+        {userBtn}
         <button className="btn-save" onClick={handleSave}>Save</button>
       </div>
+      <div className="ebody-wrap" style={{
+        paddingRight: `${rightPanelWidth}px`,
+        paddingLeft:  `${leftPanelWidth}px`,
+        transition: 'padding 0.32s cubic-bezier(0.4,0,0.2,1)',
+      }}>
       <div className="ebody">
         <div className="esec">
           <div className="estitle">
@@ -1524,6 +2082,7 @@ function BotEditor({ bot, onSave, onBack, onDraftChange, dark, onToggle, onSetti
           <div className="estitle">Rules</div>
           <RulesSection rules={draft.rules} onChange={r=>setDraft(d=>({...d,rules:r}))} />
         </div>
+      </div>
       </div>
     </div>
   );
