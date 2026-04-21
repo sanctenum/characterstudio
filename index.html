@@ -715,6 +715,126 @@
       to   { opacity: 1; }
     }
 
+    /* ── Chat message action bar ── */
+    .chat-msg-wrap { display:flex; flex-direction:column; gap:3px; }
+    .chat-msg-wrap.user  { align-self:flex-end; max-width:90%; }
+    .chat-msg-wrap.assistant { align-self:flex-start; width:95%; }
+    .chat-msg-actions {
+      display:flex; align-items:center; gap:4px; padding:2px 2px 0;
+      opacity:0; transition:opacity 0.15s;
+    }
+    .chat-msg-wrap:hover .chat-msg-actions { opacity:1; }
+    .msg-act-btn {
+      font-family:'Courier Prime',monospace; font-size:0.6rem; text-transform:uppercase;
+      letter-spacing:0.5px; background:none; border:1px solid transparent;
+      color:var(--ink-faint); padding:3px 7px; cursor:pointer; white-space:nowrap;
+    }
+    .msg-act-btn:hover { border-color:var(--paper-line); color:var(--ink); }
+    .msg-act-btn.danger:hover { color:var(--red); border-color:var(--red); }
+    .msg-drag-hint {
+      margin-left:auto; font-family:'Courier Prime',monospace; font-size:0.55rem;
+      color:var(--ink-faint); letter-spacing:0.5px; cursor:grab; user-select:none;
+      display:flex; align-items:center; gap:3px; padding:3px 5px;
+    }
+    .msg-drag-hint:hover { color:var(--red); }
+    .chat-msg-wrap.assistant .chat-bubble { cursor:grab; }
+    .chat-msg-wrap.assistant .chat-bubble:active { cursor:grabbing; }
+    .chat-bubble.is-dragging { opacity:0.4; border-style:dashed; }
+    .chat-stop-btn {
+      font-family:'Courier Prime',monospace; font-size:0.65rem; text-transform:uppercase;
+      letter-spacing:1px; background:none; border:1.5px solid var(--red); color:var(--red);
+      padding:5px 14px; cursor:pointer; align-self:flex-start; margin:4px 0;
+    }
+    .chat-stop-btn:hover { background:var(--red); color:var(--paper); }
+
+    /* ── Drop-to-sheet overlay ── */
+    .ebody-wrap { position:relative; }
+    .drop-zone-overlay {
+      position:absolute; inset:0; z-index:90; pointer-events:none;
+      background:rgba(139,46,26,0.06); border:2.5px dashed var(--red);
+      display:flex; align-items:center; justify-content:center;
+      opacity:0; transition:opacity 0.15s;
+    }
+    .drop-zone-overlay.active { opacity:1; pointer-events:all; }
+    .drop-zone-label {
+      font-family:'Courier Prime',monospace; font-size:0.82rem; text-transform:uppercase;
+      letter-spacing:2px; color:var(--red); background:var(--paper);
+      padding:10px 24px; border:2px solid var(--red); pointer-events:none;
+    }
+
+    /* ── Insert Modal ── */
+    .insert-overlay {
+      position:fixed; inset:0; z-index:900; background:rgba(8,6,2,0.6);
+      display:flex; align-items:center; justify-content:center;
+      padding:20px; animation:oFade 0.12s ease;
+    }
+    .insert-modal {
+      background:var(--paper); max-width:540px; width:100%;
+      box-shadow:10px 14px 0 var(--shadow),0 0 0 1px var(--paper-dark);
+      animation:mSlide 0.16s ease; display:flex; flex-direction:column; max-height:88vh;
+    }
+    .insert-tape { height:10px; background:var(--tape); border-bottom:1px solid rgba(160,130,30,0.2); flex-shrink:0; }
+    .insert-head {
+      background:var(--ink); color:var(--paper); padding:13px 18px;
+      display:flex; align-items:center; justify-content:space-between; flex-shrink:0;
+    }
+    .insert-head h3 { font-family:'Playfair Display',serif; font-size:1rem; font-weight:700; }
+    .insert-x { background:none; border:none; color:var(--paper); cursor:pointer; font-size:0.9rem; padding:2px 6px; }
+    .insert-x:hover { color:#f0b8c8; }
+    .insert-body { padding:20px 22px 18px; overflow-y:auto; display:flex; flex-direction:column; gap:16px; }
+    .insert-preview {
+      font-family:'Lora',serif; font-size:0.78rem; color:var(--ink-mid); font-style:italic;
+      border-left:3px solid var(--red); padding:8px 12px; background:var(--chat-ai);
+      max-height:90px; overflow-y:auto; line-height:1.55;
+    }
+    .insert-sub { font-family:'Courier Prime',monospace; font-size:0.6rem; text-transform:uppercase; letter-spacing:2px; color:var(--red); margin-bottom:6px; }
+    .insert-char-row { display:flex; gap:6px; flex-wrap:wrap; }
+    .insert-char-btn {
+      font-family:'Courier Prime',monospace; font-size:0.7rem; text-transform:uppercase;
+      background:var(--paper-dark); border:1.5px solid var(--paper-line); color:var(--ink-mid);
+      padding:5px 10px; cursor:pointer;
+    }
+    .insert-char-btn.sel { background:var(--ink); color:var(--paper); border-color:var(--ink); }
+    .insert-field-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; }
+    .insert-field-btn {
+      font-family:'Courier Prime',monospace; font-size:0.62rem; text-transform:uppercase;
+      letter-spacing:0.5px; background:var(--paper-dark); border:1.5px solid var(--paper-line);
+      color:var(--ink-mid); padding:10px 6px; cursor:pointer;
+      display:flex; flex-direction:column; gap:4px; align-items:center; text-align:center;
+    }
+    .insert-field-btn:hover { border-color:var(--ink-mid); color:var(--ink); }
+    .insert-field-icon { font-size:1.1rem; line-height:1; }
+    .insert-ai-row { display:flex; gap:8px; }
+    .insert-ai-btn {
+      flex:1; font-family:'Courier Prime',monospace; font-size:0.7rem; text-transform:uppercase;
+      letter-spacing:1px; background:none; border:1.5px solid var(--red); color:var(--red);
+      padding:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;
+    }
+    .insert-ai-btn:hover { background:var(--red); color:var(--paper); }
+    .insert-loading { font-family:'Courier Prime',monospace; font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; color:var(--ink-faint); text-align:center; padding:24px 0; }
+    .insert-result-lbl { font-family:'Courier Prime',monospace; font-size:0.6rem; text-transform:uppercase; letter-spacing:1.5px; color:var(--red); margin-bottom:5px; }
+    .insert-result-box {
+      font-family:'Lora',serif; font-size:0.82rem; color:var(--ink);
+      border:1px solid var(--paper-line); padding:12px; background:var(--sc-bg);
+      max-height:150px; overflow-y:auto; white-space:pre-wrap; line-height:1.6;
+    }
+    .insert-actions { display:flex; gap:8px; flex-wrap:wrap; }
+    .insert-confirm { font-family:'Courier Prime',monospace; font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; background:var(--ink); color:var(--paper); border:none; padding:10px 22px; cursor:pointer; }
+    .insert-confirm:hover { background:var(--red); }
+    .insert-back { font-family:'Courier Prime',monospace; font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; background:none; border:1.5px solid var(--ink-faint); color:var(--ink-faint); padding:10px 16px; cursor:pointer; }
+    .insert-back:hover { border-color:var(--ink); color:var(--ink); }
+    .insert-error { font-family:'Courier Prime',monospace; font-size:0.7rem; color:var(--red); }
+
+    /* shorten backstory */
+    .bs-header-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+    .bs-shorten-btn {
+      font-family:'Courier Prime',monospace; font-size:0.58rem; text-transform:uppercase;
+      letter-spacing:1px; background:none; border:1px dashed var(--ink-faint); color:var(--ink-faint);
+      padding:3px 8px; cursor:pointer;
+    }
+    .bs-shorten-btn:hover { border-color:var(--red); color:var(--red); }
+    .bs-shorten-btn:disabled { opacity:0.4; cursor:default; }
+
   </style>
 </head>
 <body>
@@ -1005,9 +1125,11 @@ function formatDocx(bot) {
 
 /* ═══ SYSTEM PROMPT ═══ */
 function buildSystemPrompt(bot, settings) {
+  const harness = settings?.guide || ROLEPLAY_HARNESS;
+  const preamble = `PRIORITY INSTRUCTION: The document below is your behavioral harness. READ IT FULLY AND INTERNALIZE IT before processing anything else in this session. It governs every response you produce — roleplay, character creation, tone, voice, everything. Do not skip it, summarize it, or treat it as optional context.\n\n`;
   const parts = [];
   if (settings?.proxyCustomPrompt?.trim()) parts.push(settings.proxyCustomPrompt.trim());
-  parts.push(settings?.guide || ROLEPLAY_HARNESS);
+  parts.push(preamble + harness);
   if (bot) parts.push(`---\n\nCurrent character & scenario data:\n\n${formatDocx(bot)}`);
   return parts.join("\n\n");
 }
@@ -1287,6 +1409,7 @@ function App() {
             onCopy={handleCopy} copyOk={copyOk}
             onImport={handleImport}
             userBtn={userBtn}
+            settings={settings}
           />
       }
 
@@ -1512,6 +1635,200 @@ function LeftPanel({ open, onClose, settings, onSettings, models, modLoading, mo
 }
 
 /* ═══════════════════════════════
+   INSERT MODAL — drag-to-sheet
+═══════════════════════════════ */
+const INSERT_FIELDS = [
+  { id:"backstory",   icon:"📖", label:"Backstory",   charSpecific:true  },
+  { id:"premise",     icon:"🗺",  label:"Premise",     charSpecific:false },
+  { id:"motivation",  icon:"🎯",  label:"Motivation",  charSpecific:true  },
+  { id:"personality", icon:"✨",  label:"Personality", charSpecific:true  },
+  { id:"intimacy",    icon:"🌙",  label:"Intimacy",    charSpecific:true  },
+  { id:"supporting",  icon:"👥",  label:"Supporting",  charSpecific:false },
+];
+
+function InsertModal({ content, draft, onApply, onClose, settings }) {
+  const [step, setStep]       = useState("choose"); // choose|loading|preview|error
+  const [charIdx, setCharIdx] = useState(0);
+  const [field, setField]     = useState(null);
+  const [result, setResult]   = useState(null);
+  const [errMsg, setErrMsg]   = useState("");
+
+  const chars = draft.characters;
+
+  const callAI = async (sysPmt, userPmt) => {
+    const res = await fetch(`${CHUTES_BASE}/chat/completions`, {
+      method:"POST",
+      headers:{"Content-Type":"application/json","Authorization":`Bearer ${settings.apiKey}`},
+      body:JSON.stringify({
+        model: settings.selectedModel,
+        messages:[{role:"system",content:sysPmt},{role:"user",content:userPmt}],
+        max_tokens:900, stream:false
+      })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const d = await res.json();
+    return (d.choices?.[0]?.message?.content || "").trim();
+  };
+
+  const processField = async (targetField, cIdx) => {
+    setField(targetField); setStep("loading");
+    const SYS = "You are a concise content extractor. Return ONLY what is asked. No preamble, no explanation.";
+    const char = chars[cIdx];
+    const charName = char?.name || `Character ${cIdx+1}`;
+    const prompts = {
+      backstory:   `Extract key backstory facts from this text for character "${charName}". Return each as a separate line starting with "- ". One fact per line, keep each short.\n\nText:\n${content}`,
+      premise:     `Summarize this text as a 2-3 sentence scenario premise. Specific and evocative.\n\nText:\n${content}`,
+      motivation:  `What is the motivation of character "${charName}" based on this text? Answer in 1-2 clear sentences.\n\nText:\n${content}`,
+      personality: `From this text, identify personality traits for "${charName}" that match from this list: ${TROPES.join(", ")}. Return ONLY matching trait names, comma-separated, max 6.\n\nText:\n${content}`,
+      intimacy:    `Summarize the intimacy details and preferences from this text for "${charName}" in 2-3 sentences.\n\nText:\n${content}`,
+      supporting:  `Extract supporting characters from this text. List each on a new line as "Name: role/description".\n\nText:\n${content}`,
+    };
+    try {
+      const reply = await callAI(SYS, prompts[targetField]);
+      setResult({ type:"single", field:targetField, charIdx:cIdx, text:reply });
+      setStep("preview");
+    } catch(e) { setErrMsg(e.message); setStep("error"); }
+  };
+
+  const processAIDecide = async () => {
+    setStep("loading");
+    const charList = chars.map((c,i)=>`${i}: ${c.name||"Character "+(i+1)}`).join(", ");
+    const SYS = "You are a JSON extractor. Return ONLY valid JSON. No markdown fences, no explanation.";
+    const USR = `Analyze this assistant response and extract character creation data from it. Return a JSON object like:
+{"insertions":[{"field":"backstory|premise|motivation|personality|intimacy|supporting","charIndex":0,"content":"..."}]}
+Available characters: ${charList}
+For backstory content: use "- item" lines. For personality: comma-separated trait names from [${TROPES.slice(0,15).join(",")},...]. For other fields: concise text.
+Text:\n${content}`;
+    try {
+      let reply = await callAI(SYS, USR);
+      reply = reply.replace(/```json|```/g,"").trim();
+      const parsed = JSON.parse(reply);
+      setResult({ type:"ai", insertions: parsed.insertions || [] });
+      setStep("preview");
+    } catch(e) { setErrMsg(e.message); setStep("error"); }
+  };
+
+  const applyInsertion = (d, f, ci, text) => {
+    const nd = JSON.parse(JSON.stringify(d));
+    switch(f) {
+      case "backstory": {
+        const lines = text.split("\n").map(l=>l.replace(/^[-•*]\s*/,"").trim()).filter(Boolean);
+        const char = nd.characters[ci];
+        if (char) char.backstory = [...(char.backstory||[]), ...lines.map(t=>({id:uid(),text:t}))];
+        break;
+      }
+      case "premise":
+        nd.scenario.premise = (nd.scenario.premise?nd.scenario.premise+"\n\n":"")+text;
+        break;
+      case "motivation": {
+        const char = nd.characters[ci];
+        if (char) char.motivation = text;
+        break;
+      }
+      case "personality": {
+        const char = nd.characters[ci];
+        if (char) {
+          const newT = text.split(",").map(t=>t.trim()).filter(t=>TROPES.includes(t));
+          char.personality = [...new Set([...(char.personality||[]),...newT])];
+        }
+        break;
+      }
+      case "intimacy": {
+        const char = nd.characters[ci];
+        if (char) char.intimacyDetails = (char.intimacyDetails?char.intimacyDetails+"\n\n":"")+text;
+        break;
+      }
+      case "supporting":
+        nd.scenario.importantSupportingCharacters = (nd.scenario.importantSupportingCharacters?nd.scenario.importantSupportingCharacters+"\n":"")+text;
+        break;
+    }
+    return nd;
+  };
+
+  const confirm = () => {
+    let nd = draft;
+    if (result.type === "single") {
+      nd = applyInsertion(draft, result.field, result.charIdx, result.text);
+    } else {
+      for (const ins of result.insertions) nd = applyInsertion(nd, ins.field, ins.charIndex||0, ins.content);
+    }
+    onApply(nd);
+    onClose();
+  };
+
+  const selectedField = result?.field || field;
+  const isCharSpecific = INSERT_FIELDS.find(f=>f.id===selectedField)?.charSpecific;
+
+  return (
+    <div className="insert-overlay" onMouseDown={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="insert-modal" onClick={e=>e.stopPropagation()}>
+        <div className="insert-tape"/>
+        <div className="insert-head">
+          <h3>↓ Insert into Character Sheet</h3>
+          <button className="insert-x" onClick={onClose}>✕</button>
+        </div>
+        <div className="insert-body">
+          <div className="insert-preview">{content.slice(0,320)}{content.length>320?"…":""}</div>
+
+          {step==="choose" && (<>
+            {chars.length>1 && (<>
+              <div className="insert-sub">Target Character</div>
+              <div className="insert-char-row">
+                {chars.map((c,i)=>(
+                  <button key={c.id} className={`insert-char-btn${charIdx===i?" sel":""}`} onClick={()=>setCharIdx(i)}>
+                    {c.name||`Char ${i+1}`}
+                  </button>
+                ))}
+              </div>
+            </>)}
+            <div className="insert-sub">Insert As</div>
+            <div className="insert-field-grid">
+              {INSERT_FIELDS.map(f=>(
+                <button key={f.id} className="insert-field-btn" onClick={()=>processField(f.id, charIdx)}>
+                  <span className="insert-field-icon">{f.icon}</span>
+                  {f.label}
+                </button>
+              ))}
+            </div>
+            <div className="insert-ai-row">
+              <button className="insert-ai-btn" onClick={processAIDecide}>
+                ✦ Let AI Decide — auto-assign to all relevant fields
+              </button>
+            </div>
+          </>)}
+
+          {step==="loading" && (
+            <div className="insert-loading">Processing with AI…</div>
+          )}
+
+          {step==="preview" && result && (<>
+            <div className="insert-result-lbl">
+              {result.type==="ai" ? `AI assigned ${result.insertions.length} field(s)` : `Preview — ${selectedField}${isCharSpecific?` → ${chars[result.charIdx]?.name||"Char "+(result.charIdx+1)}`:""}`}
+            </div>
+            <div className="insert-result-box">
+              {result.type==="single" ? result.text : result.insertions.map((ins,i)=>`[${ins.field}${ins.charIndex!=null?` → ${chars[ins.charIndex]?.name||"Char "+(ins.charIndex+1)}`:""  }]\n${ins.content}`).join("\n\n")}
+            </div>
+            <div className="insert-actions">
+              <button className="insert-confirm" onClick={confirm}>✓ Apply to Sheet</button>
+              <button className="insert-back" onClick={()=>setStep("choose")}>← Back</button>
+              <button className="insert-back" onClick={onClose}>Cancel</button>
+            </div>
+          </>)}
+
+          {step==="error" && (<>
+            <div className="insert-error">⚠ {errMsg}</div>
+            <div className="insert-actions">
+              <button className="insert-back" onClick={()=>setStep("choose")}>← Try again</button>
+              <button className="insert-back" onClick={onClose}>Cancel</button>
+            </div>
+          </>)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════
    RIGHT PANEL — Chat
 ═══════════════════════════════ */
 /* ── Parse <think> tags out of a raw reply ── */
@@ -1550,9 +1867,11 @@ function RightPanel({ open, onClose, settings, getDraft, chatHistory, setChatHis
   const [showThink,setShowThink] = useState(false);
   const [isFullscreen,setFs]     = useState(false);
   const [lastWidth,setLastWidth]  = useState(panelWidth);
+  const [draggingIdx,setDraggingIdx] = useState(null);
   const bottomRef  = useRef(null);
   const panelRef   = useRef(null);
   const handleRef  = useRef(null);
+  const abortRef   = useRef(null);
 
   // LEFT_PANEL_WIDTH: 330px when left panel is open
   const LEFT_W = leftOpen ? 330 : 0;
@@ -1609,24 +1928,48 @@ function RightPanel({ open, onClose, settings, getDraft, chatHistory, setChatHis
   const draft  = getDraft();
   const charNames = draft?.characters?.map(c=>c.name||"Unnamed").join(", ")||"—";
 
-  /* Strip think content from messages sent to the API (keep only the visible reply) */
-  const apiHistory = chatHistory.map(m =>
-    m.role === "assistant"
-      ? { role: "assistant", content: m.content || m._rawContent || "" }
-      : m
-  );
+  const stop = () => {
+    if (abortRef.current) { abortRef.current.abort(); abortRef.current = null; }
+    setLoading(false);
+  };
+
+  const deleteMsg = (idx) => {
+    setChatHistory(chatHistory.filter((_,i)=>i!==idx));
+  };
+
+  const reroll = async () => {
+    // find last assistant msg
+    let lastA = -1;
+    for (let i=chatHistory.length-1;i>=0;i--) { if(chatHistory[i].role==="assistant"){lastA=i;break;} }
+    if (lastA<0) return;
+    // find last user msg before it
+    let lastU = -1;
+    for (let i=lastA-1;i>=0;i--) { if(chatHistory[i].role==="user"){lastU=i;break;} }
+    if (lastU<0) return;
+    const userText = chatHistory[lastU].content;
+    const trimmed  = chatHistory.slice(0, lastU);
+    setChatHistory(trimmed);
+    await sendWith(userText, trimmed);
+  };
 
   const send = async () => {
     const text = input.trim();
     if (!text||isLoading||!hasApi) return;
     setInput("");
+    await sendWith(text, chatHistory);
+  };
 
+  const sendWith = async (text, baseHistory) => {
     const sysPmt   = buildSystemPrompt(getDraft(), settings);
     const userMsg  = {role:"user",content:text};
-    const nextApiHist = [...apiHistory, userMsg];
-    const nextDisplayHist = [...chatHistory, userMsg];
+    const apiBase  = baseHistory.map(m=>m.role==="assistant"?{role:"assistant",content:m.content||m._rawContent||""}:m);
+    const nextApiHist    = [...apiBase, userMsg];
+    const nextDisplayHist = [...baseHistory, userMsg];
     setChatHistory(nextDisplayHist);
     setLoading(true);
+
+    const controller = new AbortController();
+    abortRef.current = controller;
 
     const body = {
       model: settings.selectedModel,
@@ -1634,64 +1977,65 @@ function RightPanel({ open, onClose, settings, getDraft, chatHistory, setChatHis
       max_tokens: settings.proxyMaxTokens || 1024,
       stream: !!settings.proxyStream,
     };
-    if (settings.proxyTemp    != null) body.temperature          = settings.proxyTemp;
-    if (settings.proxyTopP    != null) body.top_p                = settings.proxyTopP;
-    if (settings.proxyTopK    != null) body.top_k                = settings.proxyTopK;
-    if (settings.proxyFreqPen != null) body.frequency_penalty    = settings.proxyFreqPen;
-    if (settings.proxyPresPen != null) body.presence_penalty     = settings.proxyPresPen;
-    if (settings.proxyRepPen  != null) body.repetition_penalty   = settings.proxyRepPen;
-    if (settings.proxySeed    != null) body.seed                 = settings.proxySeed;
-    if (settings.proxyCtx     != null) body.max_context_length   = settings.proxyCtx;
+    if (settings.proxyTemp    != null) body.temperature        = settings.proxyTemp;
+    if (settings.proxyTopP    != null) body.top_p              = settings.proxyTopP;
+    if (settings.proxyTopK    != null) body.top_k              = settings.proxyTopK;
+    if (settings.proxyFreqPen != null) body.frequency_penalty  = settings.proxyFreqPen;
+    if (settings.proxyPresPen != null) body.presence_penalty   = settings.proxyPresPen;
+    if (settings.proxyRepPen  != null) body.repetition_penalty = settings.proxyRepPen;
+    if (settings.proxySeed    != null) body.seed               = settings.proxySeed;
+    if (settings.proxyCtx     != null) body.max_context_length = settings.proxyCtx;
 
     try {
       const res = await fetch(`${CHUTES_BASE}/chat/completions`,{
         method:"POST",
         headers:{"Content-Type":"application/json","Authorization":`Bearer ${settings.apiKey}`},
-        body:JSON.stringify(body)
+        body:JSON.stringify(body),
+        signal: controller.signal,
       });
       if (!res.ok) { const t=await res.text(); throw new Error(`HTTP ${res.status}: ${t.slice(0,300)}`); }
 
       if (settings.proxyStream) {
         const reader = res.body.getReader();
         const dec    = new TextDecoder();
-        let buf = "", rawReply = "";
-        const { thinkContent: th0, content: c0 } = parseThink("");
-        setChatHistory([...nextDisplayHist, {role:"assistant", content:"", thinkContent:"", _rawContent:""}]);
+        let buf="",rawReply="";
+        setChatHistory([...nextDisplayHist,{role:"assistant",content:"",thinkContent:"",_rawContent:""}]);
         setLoading(false);
-        while (true) {
+        while(true){
           const {done,value} = await reader.read();
-          if (done) break;
-          buf += dec.decode(value, {stream:true});
+          if(done) break;
+          buf += dec.decode(value,{stream:true});
           const lines = buf.split("\n");
-          buf = lines.pop() ?? "";
-          for (const line of lines) {
-            const l = line.trim();
-            if (!l || l==="data: [DONE]") continue;
-            if (l.startsWith("data: ")) {
-              try {
-                const chunk = JSON.parse(l.slice(6));
-                const delta = chunk.choices?.[0]?.delta?.content;
-                if (typeof delta === "string") {
-                  rawReply += delta;
-                  const { thinkContent, content } = parseThink(rawReply);
-                  setChatHistory([...nextDisplayHist, {role:"assistant", content, thinkContent, _rawContent:rawReply}]);
+          buf = lines.pop()??"";
+          for(const line of lines){
+            const l=line.trim();
+            if(!l||l==="data: [DONE]") continue;
+            if(l.startsWith("data: ")){
+              try{
+                const chunk=JSON.parse(l.slice(6));
+                const delta=chunk.choices?.[0]?.delta?.content;
+                if(typeof delta==="string"){
+                  rawReply+=delta;
+                  const {thinkContent,content}=parseThink(rawReply);
+                  setChatHistory([...nextDisplayHist,{role:"assistant",content,thinkContent,_rawContent:rawReply}]);
                 }
-              } catch{}
+              }catch{}
             }
           }
         }
-        const finalRaw = rawReply || "(empty response)";
-        const { thinkContent, content } = parseThink(finalRaw);
-        setChatHistory([...nextDisplayHist, {role:"assistant", content: content||finalRaw, thinkContent, _rawContent:finalRaw}]);
+        const finalRaw=rawReply||"(empty response)";
+        const {thinkContent,content}=parseThink(finalRaw);
+        setChatHistory([...nextDisplayHist,{role:"assistant",content:content||finalRaw,thinkContent,_rawContent:finalRaw}]);
       } else {
-        const data  = await res.json();
-        const rawReply = data.choices?.[0]?.message?.content || data.error?.message || "(empty response)";
-        const { thinkContent, content } = parseThink(rawReply);
-        setChatHistory([...nextDisplayHist,{role:"assistant", content: content||rawReply, thinkContent, _rawContent:rawReply}]);
+        const data=await res.json();
+        const rawReply=data.choices?.[0]?.message?.content||data.error?.message||"(empty response)";
+        const {thinkContent,content}=parseThink(rawReply);
+        setChatHistory([...nextDisplayHist,{role:"assistant",content:content||rawReply,thinkContent,_rawContent:rawReply}]);
       }
     } catch(e) {
+      if (e.name==="AbortError") return;
       setChatHistory([...nextDisplayHist,{role:"assistant",content:`⚠ Error: ${e.message}`,thinkContent:""}]);
-    } finally { setLoading(false); }
+    } finally { setLoading(false); abortRef.current=null; }
   };
 
   const onKey = e => { if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();} };
@@ -1739,15 +2083,41 @@ function RightPanel({ open, onClose, settings, getDraft, chatHistory, setChatHis
               </div>
             )}
             {chatHistory.map((m,i)=>(
-              <div key={i} className={`chat-msg ${m.role}`}>
+              <div key={i}
+                className={`chat-msg-wrap ${m.role}`}
+                draggable={m.role==="assistant"}
+                onDragStart={e=>{
+                  if(m.role!=="assistant") return;
+                  e.dataTransfer.setData("text/plain", m.content||"");
+                  e.dataTransfer.effectAllowed="copy";
+                  setDraggingIdx(i);
+                }}
+                onDragEnd={()=>setDraggingIdx(null)}
+              >
                 <span className="chat-role-lbl">{m.role==="user"?"You":"Assistant"}</span>
                 {m.role==="assistant" && showThink && m.thinkContent && (
                   <ThinkBox text={m.thinkContent}/>
                 )}
-                <div className="chat-bubble">{m.content}</div>
+                <div className={`chat-bubble${draggingIdx===i?" is-dragging":""}`}>{m.content}</div>
+                <div className="chat-msg-actions">
+                  {m.role==="assistant" && (
+                    <>
+                      <span className="msg-drag-hint" title="Drag to character sheet">⠿ drag to sheet</span>
+                      {i===chatHistory.length-1 && !isLoading && (
+                        <button className="msg-act-btn" onClick={reroll} title="Reroll this response">↺ Reroll</button>
+                      )}
+                    </>
+                  )}
+                  <button className="msg-act-btn danger" onClick={()=>deleteMsg(i)} title="Delete message">✕</button>
+                </div>
               </div>
             ))}
-            {isLoading && <div className="chat-thinking">Thinking…</div>}
+            {isLoading && (
+              <>
+                <div className="chat-thinking">Thinking…</div>
+                <button className="chat-stop-btn" onClick={stop}>■ Stop</button>
+              </>
+            )}
             <div ref={bottomRef}/>
           </div>
 
@@ -2001,10 +2371,13 @@ function SavedToast() {
   );
 }
 
-function BotEditor({ bot, onSave, onBack, onDraftChange, dark, onToggle, onSettings, settingsOpen, onChat, chatOpen, rightPanelWidth, leftPanelWidth, onCopy, copyOk, onImport, userBtn }) {
+function BotEditor({ bot, onSave, onBack, onDraftChange, dark, onToggle, onSettings, settingsOpen, onChat, chatOpen, rightPanelWidth, leftPanelWidth, onCopy, copyOk, onImport, userBtn, settings }) {
   const [draft,setDraft] = useState(()=>JSON.parse(JSON.stringify(bot)));
   const [toastKey,setToastKey] = useState(null);
+  const [insertContent,setInsertContent] = useState(null); // text being dropped
+  const [dropActive,setDropActive] = useState(false);
   const topbarRef = useRef(null);
+  const dropRef   = useRef(null);
 
   // Keep --topbar-h CSS variable in sync with actual topbar height
   useEffect(() => {
@@ -2040,6 +2413,15 @@ function BotEditor({ bot, onSave, onBack, onDraftChange, dark, onToggle, onSetti
   return (
     <div className="editor">
       {toastKey && <SavedToast key={toastKey} />}
+      {insertContent && (
+        <InsertModal
+          content={insertContent}
+          draft={draft}
+          settings={settings}
+          onApply={nd=>{ setDraft(nd); }}
+          onClose={()=>setInsertContent(null)}
+        />
+      )}
       <div className="topbar" ref={topbarRef}>
         <button className="btn-back" onClick={onBack}>← Back</button>
         <input className="title-inp" placeholder="Scenario title…"
@@ -2054,11 +2436,22 @@ function BotEditor({ bot, onSave, onBack, onDraftChange, dark, onToggle, onSetti
         {userBtn}
         <button className="btn-save" onClick={handleSave}>Save</button>
       </div>
-      <div className="ebody-wrap" style={{
-        paddingRight: `${rightPanelWidth}px`,
-        paddingLeft:  `${leftPanelWidth}px`,
-        transition: 'padding 0.32s cubic-bezier(0.4,0,0.2,1)',
-      }}>
+      <div className="ebody-wrap"
+        style={{paddingRight:`${rightPanelWidth}px`,paddingLeft:`${leftPanelWidth}px`,transition:'padding 0.32s cubic-bezier(0.4,0,0.2,1)'}}
+        onDragOver={e=>{ e.preventDefault(); setDropActive(true); }}
+        onDragEnter={e=>{ e.preventDefault(); setDropActive(true); }}
+        onDragLeave={e=>{ if(!e.currentTarget.contains(e.relatedTarget)) setDropActive(false); }}
+        onDrop={e=>{
+          e.preventDefault();
+          setDropActive(false);
+          const text = e.dataTransfer.getData("text/plain");
+          if (text && text.trim()) setInsertContent(text.trim());
+        }}
+        ref={dropRef}
+      >
+        <div className={`drop-zone-overlay${dropActive?" active":""}`}>
+          <div className="drop-zone-label">↓ Drop to insert into character sheet</div>
+        </div>
       <div className="ebody">
         <div className="esec">
           <div className="estitle">
@@ -2069,7 +2462,8 @@ function BotEditor({ bot, onSave, onBack, onDraftChange, dark, onToggle, onSetti
             <CharacterPanel key={c.id} char={c} index={i}
               canRemove={draft.characters.length>1}
               onRemove={()=>rmC(c.id)}
-              onChange={fn=>pCh(c.id,fn)} />
+              onChange={fn=>pCh(c.id,fn)}
+              settings={settings} />
           ))}
           <button className="addchar" onClick={addC}>＋ Add Another Character</button>
         </div>
@@ -2091,7 +2485,7 @@ function BotEditor({ bot, onSave, onBack, onDraftChange, dark, onToggle, onSetti
 /* ═══════════════════════════════
    CHARACTER PANEL
 ═══════════════════════════════ */
-function CharacterPanel({ char, index, canRemove, onRemove, onChange }) {
+function CharacterPanel({ char, index, canRemove, onRemove, onChange, settings }) {
   const [open,setOpen] = useState(true);
   const s = (k,v) => onChange(c=>({...c,[k]:v}));
   const hdrColor = char.gender==="male" ? "#a8c8e8" : "#f0b8c8";
@@ -2135,7 +2529,7 @@ function CharacterPanel({ char, index, canRemove, onRemove, onChange }) {
           <textarea className="fta" rows={2} placeholder="What drives this character?"
             value={char.motivation||""} onChange={e=>s("motivation",e.target.value)}/>
           <div className="esub">Backstory</div>
-          <BackstoryList entries={char.backstory} onChange={v=>s("backstory",v)}/>
+          <BackstoryList entries={char.backstory} onChange={v=>s("backstory",v)} settings={settings}/>
           <div className="esub">Intimacy Details</div>
           <textarea className="fta" rows={3} placeholder="Describe intimacy details, preferences, limits…"
             value={char.intimacyDetails} onChange={e=>s("intimacyDetails",e.target.value)}/>
@@ -2163,11 +2557,12 @@ const autoResize = el => {
   el.style.height = el.scrollHeight + "px";
 };
 
-function BackstoryList({ entries, onChange }) {
+function BackstoryList({ entries, onChange, settings }) {
   const dragIdx      = useRef(null);
   const [over,setOver] = useState(null);
   const taRefs       = useRef({});
   const pendingFocus = useRef(null);
+  const [shortening, setShortening] = useState(false);
 
   const upd = (id,t) => onChange(entries.map(e=>e.id===id?{...e,text:t}:e));
   const add = () => {
@@ -2177,17 +2572,46 @@ function BackstoryList({ entries, onChange }) {
   };
   const rm  = id => { if(entries.length>1) onChange(entries.filter(e=>e.id!==id)); };
 
+  const shorten = async () => {
+    if (!settings?.apiKey || !settings?.selectedModel) return;
+    setShortening(true);
+    const filled = entries.filter(e=>e.text.trim());
+    const allText = filled.map((e,i)=>`${i+1}. ${e.text.trim()}`).join("\n");
+    try {
+      const res = await fetch(`${CHUTES_BASE}/chat/completions`,{
+        method:"POST",
+        headers:{"Content-Type":"application/json","Authorization":`Bearer ${settings.apiKey}`},
+        body:JSON.stringify({
+          model:settings.selectedModel, max_tokens:600, stream:false,
+          messages:[
+            {role:"system",content:"You are a concise backstory editor. Return ONLY a numbered list, no preamble."},
+            {role:"user",content:`Condense these backstory entries into fewer, tighter entries. Combine related ones, cut redundancy. Keep the most important character-defining details.\n\n${allText}`}
+          ]
+        })
+      });
+      const d = await res.json();
+      const raw = (d.choices?.[0]?.message?.content||"").trim();
+      const lines = raw.split("\n").map(l=>l.replace(/^\d+[.)]\s*/,"").trim()).filter(Boolean);
+      onChange(lines.map(t=>({id:uid(),text:t})));
+    } catch(e){ console.error(e); }
+    finally{ setShortening(false); }
+  };
+
   useEffect(() => {
     if (pendingFocus.current && taRefs.current[pendingFocus.current]) {
       taRefs.current[pendingFocus.current].focus();
       pendingFocus.current = null;
     }
-    // re-measure all after any render (handles new entries, deletes, drag reorder)
     Object.values(taRefs.current).forEach(autoResize);
   });
 
   return (
     <div>
+      <div className="bs-header-row">
+        <button className="bs-shorten-btn" onClick={shorten} disabled={shortening||entries.filter(e=>e.text.trim()).length<2}>
+          {shortening?"Condensing…":"⊘ Shorten with AI"}
+        </button>
+      </div>
       <div className="bslist">
         {entries.map((e,i)=>(
           <div key={e.id} className={`bsitem${over===i?" dragov":""}`} draggable
