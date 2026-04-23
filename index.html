@@ -2518,6 +2518,8 @@ function RightPanel({ open, onClose, settings, getDraft, chatHistory, setChatHis
       setTimeout(() => setCopiedIdx(c => c === idx ? null : c), 2000);
     });
   };
+
+  const onKey = e => { if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();} };
   const modelShort = settings.selectedModel?.split("/").pop() || settings.selectedModel || "—";
 
   return (
