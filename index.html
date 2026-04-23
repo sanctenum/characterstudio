@@ -883,6 +883,38 @@
     .total-token-pill.over { color:var(--red); }
 
 
+    /* ── First Messages ── */
+    .fm-wrap { display:flex; flex-direction:column; gap:8px; }
+    .fm-topbar { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+    .fm-nav-btn {
+      width:28px; height:28px; flex-shrink:0;
+      background:var(--paper-dark); border:1.5px solid var(--paper-line);
+      color:var(--ink-mid); cursor:pointer; display:flex; align-items:center;
+      justify-content:center; font-size:0.85rem;
+    }
+    .fm-nav-btn:hover:not(:disabled) { border-color:var(--ink); color:var(--ink); }
+    .fm-nav-btn:disabled { opacity:0.3; cursor:default; }
+    .fm-counter {
+      font-family:'Courier Prime',monospace; font-size:0.65rem; color:var(--ink-faint);
+      text-transform:uppercase; letter-spacing:1px; white-space:nowrap; padding:0 2px;
+    }
+    .fm-actions { display:flex; gap:5px; margin-left:auto; }
+    .fm-btn {
+      font-family:'Courier Prime',monospace; font-size:0.6rem; text-transform:uppercase;
+      letter-spacing:1px; background:none; border:1px solid var(--paper-line);
+      color:var(--ink-faint); padding:4px 9px; cursor:pointer; white-space:nowrap;
+    }
+    .fm-btn:hover      { border-color:var(--ink-mid); color:var(--ink); }
+    .fm-btn.ok         { color:#2c6e3a; border-color:#2c6e3a; }
+    .fm-btn.danger:hover { border-color:var(--red); color:var(--red); }
+    .fm-ta {
+      width:100%; font-family:'Lora',serif; font-size:0.84rem; color:var(--ink);
+      background:var(--paper-dark); border:1px solid var(--paper-line);
+      padding:10px 12px; outline:none; resize:none; line-height:1.65; min-height:110px;
+    }
+    .fm-ta:focus { border-color:var(--ink-mid); }
+    .fm-ta::placeholder { color:var(--ink-faint); font-style:italic; font-size:0.78rem; }
+
     .sp-section { display:flex; flex-direction:column; gap:10px; }
     .sp-mode-row { display:flex; gap:0; border:1.5px solid var(--paper-line); overflow:hidden; align-self:flex-start; }
     .sp-mode-btn {
@@ -1378,12 +1410,13 @@ const newChar = () => ({
   personality:[], motivation:"",
   backstory:[{id:uid(),text:""}],
   intimacyDetails:"",
-  speechPatterns:{ mode:"preset", presetId:null, selectedLines:[], customLines:[] }
+  speechPatterns:{ mode:"preset", presetId:null, selectedLines:[], customLines:[] },
+  firstMessages:[""]
 });
 const newBot = () => ({
   id:uid(), title:"", createdAt:new Date().toISOString(),
   characters:[newChar()],
-  scenario:{setting:"",timePeriod:"",overallTone:"",premise:"",importantSupportingCharacters:"",dynamics:[]},
+  scenario:{setting:"",timePeriod:"",overallTone:"",premise:"",importantSupportingCharacters:"",dynamics:[],firstMessages:[""]},
   rules:[...DEFAULT_RULES]
 });
 
@@ -1425,7 +1458,18 @@ function installUserAutocorrect() {
 }
 
 /* ═══ STORAGE ═══ */
-const loadBots     = () => { try{return JSON.parse(localStorage.getItem("cs_bots")||"[]")}catch{return[]} };
+const loadBots     = () => {
+  try {
+    const bots = JSON.parse(localStorage.getItem("cs_bots")||"[]");
+    // migrate firstMessages from character[0] to scenario if needed
+    return bots.map(b => {
+      if (b.scenario && Array.isArray(b.scenario.firstMessages)) return b;
+      const fm = (b.characters && b.characters[0] && Array.isArray(b.characters[0].firstMessages))
+        ? b.characters[0].firstMessages : [""];
+      return { ...b, scenario: { ...(b.scenario||{}), firstMessages: fm } };
+    });
+  } catch { return []; }
+};
 const saveBots     = b  => localStorage.setItem("cs_bots", JSON.stringify(b));
 const loadTheme    = () => localStorage.getItem("cs_theme")==="dark";
 const loadSettings = () => { try{return JSON.parse(localStorage.getItem("cs_settings")||"{}")}catch{return{}} };
@@ -1486,6 +1530,11 @@ function formatDocx(bot) {
     dyns.forEach(d=>{ if(d.description&&d.description.trim()) s+=`${d.charA} - ${d.charB}: ${d.description.trim()}\n\n`; });
   }
   s += `Important Supporting Characters: ${bot.scenario.importantSupportingCharacters}\n\n`;
+  const fms = (bot.scenario.firstMessages || []).filter(m => m && m.trim());
+  if (fms.length > 0) {
+    s += `> Intro Message\n\n`;
+    fms.forEach((m,i) => { s += `[Variant ${i+1}]\n${m.trim()}\n\n`; });
+  }
   s += `\n> Rules\n\n`;
   bot.rules.forEach(r=>{ s+=`• ${r}\n\n`; });
   return s;
@@ -2732,16 +2781,24 @@ function ImportModal({ onClose, onImport }) {
         const valid = bots.filter(b => b && typeof b === "object" && Array.isArray(b.characters));
         if (valid.length === 0) { setError("No valid character data found in this file."); return; }
         // Assign fresh IDs to avoid collisions
-        const imported = valid.map(b => ({
-          ...b,
-          id: uid(),
-          createdAt: b.createdAt || new Date().toISOString(),
-          characters: (b.characters||[]).map(c => ({...c, id: uid(),
-            speechPatterns: c.speechPatterns || { mode:"preset", presetId:null, selectedLines:[], customLines:[] }
-          })),
-          scenario: b.scenario || {},
-          rules: b.rules || [...DEFAULT_RULES],
-        }));
+        const imported = valid.map(b => {
+          // migrate firstMessages from first character to scenario if needed
+          const scenFM = (b.scenario && b.scenario.firstMessages && b.scenario.firstMessages.length > 0)
+            ? b.scenario.firstMessages
+            : ((b.characters && b.characters[0] && b.characters[0].firstMessages && b.characters[0].firstMessages.some(m=>m.trim()))
+                ? b.characters[0].firstMessages
+                : [""]);
+          return {
+            ...b,
+            id: uid(),
+            createdAt: b.createdAt || new Date().toISOString(),
+            characters: (b.characters||[]).map(c => ({...c, id: uid(),
+              speechPatterns: c.speechPatterns || { mode:"preset", presetId:null, selectedLines:[], customLines:[] },
+            })),
+            scenario: { ...(b.scenario || {}), firstMessages: scenFM },
+            rules: b.rules || [...DEFAULT_RULES],
+          };
+        });
         onImport(imported);
         onClose();
       } catch {
@@ -3005,7 +3062,8 @@ function BotEditor({ bot, onSave, onBack, onDraftChange, dark, onToggle, onSetti
         <div className="esec">
           <div className="estitle">Scenario</div>
           <ScenarioSection scenario={draft.scenario} characters={draft.characters}
-            onSc={pSc} onDynamics={v=>setDraft(d=>({...d,scenario:{...d.scenario,dynamics:v}}))} />
+            onSc={pSc} onDynamics={v=>setDraft(d=>({...d,scenario:{...d.scenario,dynamics:v}}))}
+            onFirstMessages={v=>setDraft(d=>({...d,scenario:{...d.scenario,firstMessages:v}}))} />
         </div>
         <div className="esec">
           <div className="estitle">Rules</div>
@@ -3079,6 +3137,86 @@ function CharacterPanel({ char, index, canRemove, onRemove, onChange, settings }
             value={char.intimacyDetails} onChange={e=>s("intimacyDetails",e.target.value)}/>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ═══ FIRST MESSAGES EDITOR ═══ */
+function FirstMessagesEditor({ messages, onChange }) {
+  const msgs = (messages && messages.length > 0) ? messages : [""];
+  const [idx, setIdx]       = useState(0);
+  const [copied, setCopied] = useState(false);
+  const taRef               = useRef(null);
+
+  // clamp index if messages shrink
+  const safeIdx = Math.min(idx, msgs.length - 1);
+  if (safeIdx !== idx) setIdx(safeIdx);
+
+  const current = msgs[safeIdx] || "";
+
+  const upd = val => {
+    const next = [...msgs];
+    next[safeIdx] = val;
+    onChange(next);
+    if (taRef.current) { taRef.current.style.height="auto"; taRef.current.style.height=taRef.current.scrollHeight+"px"; }
+  };
+
+  const addNew = () => {
+    const next = [...msgs, ""];
+    onChange(next);
+    setIdx(next.length - 1);
+  };
+
+  const clear = () => {
+    const next = [...msgs];
+    next[safeIdx] = "";
+    onChange(next);
+    if (taRef.current) { taRef.current.style.height="auto"; taRef.current.focus(); }
+  };
+
+  const remove = () => {
+    if (msgs.length <= 1) { onChange([""]); setIdx(0); return; }
+    const next = msgs.filter((_,i)=>i!==safeIdx);
+    onChange(next);
+    setIdx(Math.max(0, safeIdx - 1));
+  };
+
+  const copy = () => {
+    if (!current.trim()) return;
+    navigator.clipboard.writeText(current).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  useEffect(() => {
+    if (taRef.current) { taRef.current.style.height="auto"; taRef.current.style.height=taRef.current.scrollHeight+"px"; }
+  }, [safeIdx, current]);
+
+  return (
+    <div className="fm-wrap">
+      <div className="fm-topbar">
+        <button className="fm-nav-btn" onClick={()=>setIdx(i=>Math.max(0,i-1))} disabled={safeIdx===0} title="Previous message">‹</button>
+        <span className="fm-counter">{safeIdx+1} / {msgs.length}</span>
+        <button className="fm-nav-btn" onClick={()=>setIdx(i=>Math.min(msgs.length-1,i+1))} disabled={safeIdx===msgs.length-1} title="Next message">›</button>
+        <button className="fm-btn" onClick={addNew} title="Add new intro message">＋ Add</button>
+        <div className="fm-actions">
+          <button className={`fm-btn${copied?" ok":""}`} onClick={copy} disabled={!current.trim()} title="Copy this message">
+            {copied ? "✓ Copied" : "⎘ Copy"}
+          </button>
+          <button className="fm-btn danger" onClick={clear} title="Clear this message">Clear</button>
+          {msgs.length > 1 && (
+            <button className="fm-btn danger" onClick={remove} title="Delete this message">✕ Delete</button>
+          )}
+        </div>
+      </div>
+      <textarea
+        ref={taRef}
+        className="fm-ta"
+        placeholder="Write an intro / first message for this character…"
+        value={current}
+        onChange={e => upd(e.target.value)}
+      />
     </div>
   );
 }
@@ -3329,7 +3467,7 @@ function DynamicsEditor({ dynamics, characters, onChange }) {
 }
 
 /* ═══ SCENARIO SECTION ═══ */
-function ScenarioSection({ scenario, characters, onSc, onDynamics }) {
+function ScenarioSection({ scenario, characters, onSc, onDynamics, onFirstMessages }) {
   const inp = (lbl,k,ph="") => (
     <div className="scf"><div className="flbl">{lbl}</div>
       <input className="finp" placeholder={ph} value={scenario[k]||""} onChange={e=>onSc(k,e.target.value)}/></div>
@@ -3350,6 +3488,10 @@ function ScenarioSection({ scenario, characters, onSc, onDynamics }) {
         <DynamicsEditor dynamics={scenario.dynamics||[]} characters={characters} onChange={onDynamics}/>
         <div className="scsub">Supporting Cast</div>
         {txa("Important Supporting Characters","importantSupportingCharacters","List supporting characters and their roles…")}
+        <div className="scsub">Intro Message</div>
+        <div className="scf sp">
+          <FirstMessagesEditor messages={scenario.firstMessages&&scenario.firstMessages.length>0?scenario.firstMessages:[""]} onChange={onFirstMessages}/>
+        </div>
       </div>
     </div>
   );
