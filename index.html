@@ -2143,7 +2143,7 @@ function InsertModal({ content, draft, onApply, onClose, settings }) {
     const char = chars[cIdx];
     const charName = char?.name || `Character ${cIdx+1}`;
     const prompts = {
-      backstory:     `Extract backstory facts for "${charName}" from this text. One fact per line starting with "- ". Keep each line tight — just the fact, no elaboration. Only include what is actually in the text.\n\nText:\n${content}`,
+      backstory:     `Extract backstory entries for "${charName}" from this text. Format as a bullet list — one entry per line, starting with "- ". Each entry must be 1-2 sentences: the first states the fact clearly, the second adds necessary context or consequence if it meaningfully deepens understanding. Do not pad with filler. Do not omit details that define who the character is, where they come from, or what shaped them. Preserve specific names, places, events, and relationships as given. Do not merge unrelated facts into one entry. Only include what is actually stated or clearly implied in the text.\n\nText:\n${content}`,
       premise:       `Write the scenario premise from this text. Cover: who {{user}} is and their role, who the character(s) are, what is happening, how {{user}} and the character(s) are connected, and what the stakes are. 3-5 sentences. Use present tense. Second person for {{user}}, third person for characters. Stay close to what the text says — do not invent details.\n\nText:\n${content}`,
       motivation:    `What drives "${charName}" in this text? 1-2 sentences. State it directly, no padding.\n\nText:\n${content}`,
       personality:   `From this text, identify personality traits for "${charName}" matching from this list: ${TROPES.join(", ")}. Return ONLY matching trait names, comma-separated, max 6.\n\nText:\n${content}`,
@@ -2186,7 +2186,7 @@ Available characters: ${charList}
 
 Rules:
 - Only extract what is actually in the text. Do not invent or pad.
-- backstory: "- fact" lines, one per line, tight
+- backstory: bullet list, one entry per line starting with "- "; each entry is 1-2 sentences — the first states the fact, the second adds context or consequence only if it meaningfully deepens the entry; preserve specific names, places, events, and relationships; do not merge unrelated facts; do not omit character-defining details
 - personality: comma-separated trait names only from the allowed list
 - intimacy: use this structure exactly: "Experience: \nSexual Preferences: \nDesires: \nMoans: " — fill only what is present; Desires in 1-2 sentences, Moans as phonetic sounds
 - premise: 3-5 sentences covering who {{user}} is, who the character(s) are, what is happening, how they connect, and the stakes — present tense, stay close to the source
