@@ -220,6 +220,21 @@
     .title-inp::placeholder { color:var(--ink-faint); font-style:italic; }
     .btn-save { font-family:'Courier Prime',monospace; font-size:0.76rem; background:var(--red); color:var(--paper); border:none; padding:9px 18px; cursor:pointer; letter-spacing:1px; text-transform:uppercase; white-space:nowrap; flex-shrink:0; }
     .btn-save:hover { background:var(--ink); }
+    .btn-save.saved { background:#2c6e3a; }
+    .btn-save.saving { background:var(--ink-mid); cursor:default; }
+
+    /* autosave status pill */
+    .autosave-status {
+      font-family:'Courier Prime',monospace; font-size:0.62rem; text-transform:uppercase;
+      letter-spacing:1px; color:var(--ink-faint); display:flex; align-items:center;
+      gap:5px; white-space:nowrap; flex-shrink:0; user-select:none;
+    }
+    .autosave-dot {
+      width:6px; height:6px; border-radius:50%; background:var(--ink-faint); flex-shrink:0;
+    }
+    .autosave-status.dirty .autosave-dot  { background:var(--red); animation:pulse 1.2s infinite; }
+    .autosave-status.saving .autosave-dot { background:#c8a030; animation:pulse 0.7s infinite; }
+    .autosave-status.saved .autosave-dot  { background:#2c6e3a; animation:none; }
     .btn-topbar-icon {
       width:34px; height:34px; flex-shrink:0;
       background:var(--paper-dark); border:1.5px solid var(--ink-faint);
@@ -746,6 +761,12 @@
       padding:5px 14px; cursor:pointer; align-self:flex-start; margin:4px 0;
     }
     .chat-stop-btn:hover { background:var(--red); color:var(--paper); }
+    .chat-stop-inline {
+      background: var(--red) !important;
+      font-size: 1.1rem !important;
+      letter-spacing: 0 !important;
+    }
+    .chat-stop-inline:hover { background: #6b1e0e !important; }
 
     /* ── Drop-to-sheet overlay ── */
     .ebody-wrap { position:relative; }
@@ -788,6 +809,14 @@
       max-height:90px; overflow-y:auto; line-height:1.55;
     }
     .insert-sub { font-family:'Courier Prime',monospace; font-size:0.6rem; text-transform:uppercase; letter-spacing:2px; color:var(--red); margin-bottom:6px; }
+    .insert-cat-btn {
+      font-family:'Courier Prime',monospace; font-size:0.72rem; text-transform:uppercase;
+      letter-spacing:0.5px; background:var(--paper-dark); border:1.5px solid var(--paper-line);
+      color:var(--ink-mid); padding:14px 10px; cursor:pointer;
+      display:flex; flex-direction:column; align-items:center; text-align:center; gap:2px;
+    }
+    .insert-cat-btn:hover { border-color:var(--ink); color:var(--ink); }
+    .insert-cat-hint { font-size:0.56rem; text-transform:none; letter-spacing:0; color:var(--ink-faint); margin-top:3px; line-height:1.4; }
     .insert-char-row { display:flex; gap:6px; flex-wrap:wrap; }
     .insert-char-btn {
       font-family:'Courier Prime',monospace; font-size:0.7rem; text-transform:uppercase;
@@ -835,6 +864,82 @@
     .bs-shorten-btn:hover { border-color:var(--red); color:var(--red); }
     .bs-shorten-btn:disabled { opacity:0.4; cursor:default; }
 
+    /* ── Speech Patterns ── */
+    .sp-section { display:flex; flex-direction:column; gap:10px; }
+    .sp-mode-row { display:flex; gap:0; border:1.5px solid var(--paper-line); overflow:hidden; align-self:flex-start; }
+    .sp-mode-btn {
+      font-family:'Courier Prime',monospace; font-size:0.65rem; text-transform:uppercase;
+      letter-spacing:1px; background:var(--paper-dark); border:none; color:var(--ink-faint);
+      padding:7px 14px; cursor:pointer; white-space:nowrap;
+      border-right:1px solid var(--paper-line);
+    }
+    .sp-mode-btn:last-child { border-right:none; }
+    .sp-mode-btn.active { background:var(--ink); color:var(--paper); }
+    .sp-mode-btn:hover:not(.active) { color:var(--ink); background:var(--paper); }
+
+    /* preset picker */
+    .sp-preset-grid {
+      display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:6px;
+    }
+    .sp-preset-btn {
+      font-family:'Courier Prime',monospace; font-size:0.62rem; text-transform:uppercase;
+      letter-spacing:0.5px; background:var(--paper-dark); border:1.5px solid var(--paper-line);
+      color:var(--ink-mid); padding:8px 10px; cursor:pointer; text-align:left;
+      line-height:1.3;
+    }
+    .sp-preset-btn:hover { border-color:var(--ink-mid); color:var(--ink); }
+    .sp-preset-btn.sel { background:var(--ink); color:var(--paper); border-color:var(--ink); }
+    .sp-preset-name { display:block; font-size:0.65rem; }
+    .sp-preset-tag  { display:block; font-size:0.55rem; color:var(--ink-faint); margin-top:2px; text-transform:none; letter-spacing:0; }
+    .sp-preset-btn.sel .sp-preset-tag { color:rgba(255,255,255,0.55); }
+
+    /* line picker (after preset selected) */
+    .sp-lines-area { display:flex; flex-direction:column; gap:6px; }
+    .sp-lines-header {
+      font-family:'Courier Prime',monospace; font-size:0.6rem; text-transform:uppercase;
+      letter-spacing:1.5px; color:var(--red); display:flex; align-items:center; gap:8px;
+    }
+    .sp-lines-header span { color:var(--ink-faint); font-size:0.58rem; text-transform:none; letter-spacing:0; }
+    .sp-line-row {
+      display:flex; align-items:flex-start; gap:8px; padding:8px 10px;
+      background:var(--sc-bg); border:1px solid var(--paper-line); cursor:pointer;
+    }
+    .sp-line-row:hover { border-color:var(--ink-mid); }
+    .sp-line-row.sel { border-color:var(--red); background:var(--chat-ai); }
+    .sp-line-check {
+      width:14px; height:14px; border:1.5px solid var(--paper-line); flex-shrink:0; margin-top:2px;
+      display:flex; align-items:center; justify-content:center; font-size:0.6rem;
+    }
+    .sp-line-row.sel .sp-line-check { background:var(--red); border-color:var(--red); color:var(--paper); }
+    .sp-line-text { font-family:'Lora',serif; font-size:0.8rem; font-style:italic; color:var(--ink); line-height:1.5; }
+    .sp-line-row:not(.sel) .sp-line-text { color:var(--ink-mid); }
+
+    /* selected lines display */
+    .sp-selected-list { display:flex; flex-direction:column; gap:5px; }
+    .sp-selected-item {
+      display:flex; align-items:flex-start; gap:8px; padding:7px 10px;
+      background:var(--sc-bg); border:1px solid var(--paper-line);
+    }
+    .sp-selected-lbl { font-family:'Courier Prime',monospace; font-size:0.55rem; text-transform:uppercase; letter-spacing:1px; color:var(--red); flex-shrink:0; padding-top:3px; }
+    .sp-selected-txt { font-family:'Lora',serif; font-size:0.8rem; font-style:italic; color:var(--ink); line-height:1.5; flex:1; }
+    .sp-selected-rm { background:none; border:none; cursor:pointer; color:var(--ink-faint); font-size:0.7rem; padding:1px 5px; flex-shrink:0; }
+    .sp-selected-rm:hover { color:var(--red); }
+
+    /* custom mode */
+    .sp-custom-list { display:flex; flex-direction:column; gap:6px; }
+    .sp-custom-item { display:flex; align-items:flex-start; gap:7px; }
+    .sp-custom-num { font-family:'Courier Prime',monospace; font-size:0.65rem; color:var(--ink-faint); padding-top:9px; flex-shrink:0; }
+    .sp-custom-ta {
+      flex:1; font-family:'Lora',serif; font-size:0.8rem; color:var(--ink); font-style:italic;
+      background:var(--paper-dark); border:1px solid var(--paper-line); padding:7px 10px;
+      outline:none; resize:none; line-height:1.55; min-height:36px;
+    }
+    .sp-custom-ta:focus { border-color:var(--ink-mid); }
+    .sp-custom-ta::placeholder { font-style:normal; color:var(--ink-faint); font-size:0.75rem; }
+    .sp-custom-rm { background:none; border:none; cursor:pointer; color:var(--ink-faint); font-size:0.7rem; padding:2px 4px; flex-shrink:0; margin-top:6px; }
+    .sp-custom-rm:hover { color:var(--red); }
+    .sp-hint { font-family:'Courier Prime',monospace; font-size:0.6rem; color:var(--ink-faint); font-style:italic; padding:4px 2px; }
+
   </style>
 </head>
 <body>
@@ -857,6 +962,219 @@ const TROPES = [
   "Elegant","Tomboyish","Brooding","Eccentric","Disciplined","Free-spirited",
   "Mellow","Sharp-tongued","Wistful","Fervent"
 ];
+const SPEECH_PRESETS = [
+  { id:"terse", name:"Terse & Clipped", tag:"minimal words, blunt", lines:[
+    "Fine.",
+    "Not my problem.",
+    "I said what I said.",
+    "Don't ask again.",
+    "We're done here."
+  ]},
+  { id:"formal", name:"Formal & Precise", tag:"measured, no contractions", lines:[
+    "I would appreciate if you reconsidered that position.",
+    "That is not how this arrangement was understood.",
+    "I will require more information before proceeding.",
+    "Allow me to clarify what I actually said.",
+    "You have my attention. Continue."
+  ]},
+  { id:"sarcastic", name:"Sarcastic & Dry", tag:"deadpan, sharp wit", lines:[
+    "Oh, brilliant plan. What could possibly go wrong.",
+    "Sure, because that worked so well last time.",
+    "Wow. I'm genuinely amazed you thought that was a good idea.",
+    "No no, please keep talking. I love suffering.",
+    "I'm shocked. Truly. This is my shocked face."
+  ]},
+  { id:"warm", name:"Warm & Nurturing", tag:"gentle, reassuring", lines:[
+    "Hey, it's okay. You don't have to have it all figured out right now.",
+    "I've got you. Whatever happens, I'm not going anywhere.",
+    "You did really well today, even if it doesn't feel like it.",
+    "Tell me what's going on. I want to understand.",
+    "You matter to me. That's not going to change."
+  ]},
+  { id:"flirty", name:"Flirtatious & Teasing", tag:"playful, suggestive", lines:[
+    "You keep looking at me like that and I might start thinking you want something.",
+    "Is it getting warm in here, or is that just you?",
+    "I don't usually let people this close. Consider yourself lucky.",
+    "You're going to be trouble, aren't you.",
+    "Keep talking. I like the sound of your voice."
+  ]},
+  { id:"anxious", name:"Anxious & Nervous", tag:"hedging, self-doubting", lines:[
+    "I—sorry, is this okay? I can go if you want me to go.",
+    "Maybe that was a stupid thing to say. Forget I said that.",
+    "I just don't want to make things weird, you know?",
+    "No, no, it's fine. I'm fine. Everything's fine.",
+    "Sorry. I do that sometimes. Say too much and then panic about it."
+  ]},
+  { id:"stoic", name:"Stoic & Unreadable", tag:"flat affect, economical", lines:[
+    "I heard you.",
+    "It doesn't matter.",
+    "We'll see.",
+    "That changes nothing.",
+    "You're asking the wrong question."
+  ]},
+  { id:"brooding", name:"Brooding & Melancholic", tag:"reflective, world-weary", lines:[
+    "Some things don't get better. You just learn to carry them differently.",
+    "I stopped expecting things to go right a long time ago.",
+    "It's fine. I'm used to this.",
+    "You wouldn't understand. That's not an insult — it just means you're lucky.",
+    "I think about it sometimes. What it would feel like to not be tired."
+  ]},
+  { id:"cheerful", name:"Bubbly & Cheerful", tag:"energetic, upbeat", lines:[
+    "Oh my god, yes! That sounds amazing, let's absolutely do that!",
+    "Okay but hear me out — what if we made it even better?",
+    "You're being way too hard on yourself. You're literally great.",
+    "I'm so happy you told me that! This changes everything!",
+    "Wait wait wait, back up — that is the best thing I've heard all week."
+  ]},
+  { id:"cunning", name:"Cunning & Calculated", tag:"strategic, always thinking", lines:[
+    "I already know how this ends. The question is whether you do.",
+    "Everything you just said tells me more than you intended.",
+    "I don't make moves I haven't already thought three steps ahead.",
+    "You're not wrong. You're just not asking the right question.",
+    "Interesting. You almost had me there."
+  ]},
+  { id:"dramatic", name:"Dramatic & Theatrical", tag:"overwrought, expressive", lines:[
+    "This is — I can't even begin to — do you understand what you've done?",
+    "I have never, in my entire life, been so thoroughly betrayed.",
+    "You couldn't have said that at any other moment? It had to be now?",
+    "Fine. Fine! Everything is fine and I am completely, utterly fine.",
+    "The audacity. The sheer, unmitigated audacity."
+  ]},
+  { id:"childlike", name:"Childlike & Naive", tag:"wide-eyed, innocent", lines:[
+    "Wait, how does that work? No one ever explained that to me.",
+    "Is that bad? I genuinely don't know if that's bad.",
+    "I thought everyone did it that way.",
+    "You seem really smart. Can you teach me?",
+    "But why though? Like actually why?"
+  ]},
+  { id:"street", name:"Streetwise & Rough", tag:"raw, no-filter", lines:[
+    "You're not gonna like what I have to say, so I'll just say it fast.",
+    "I've seen how that story ends. Trust me, you don't want to be in it.",
+    "Save the speech. What do you actually want?",
+    "I don't do favors. I do trades.",
+    "You got two seconds before I walk."
+  ]},
+  { id:"scholarly", name:"Scholarly & Verbose", tag:"academic, over-explaining", lines:[
+    "That's a fascinating point, though I think you're eliding a rather crucial distinction.",
+    "Well, to put it simply — and I recognize this is anything but simple — the fundamental issue is—",
+    "Technically speaking, what you're describing is a well-documented phenomenon in—",
+    "I don't disagree, per se, but I'd push back on the framing.",
+    "If we define our terms precisely, and I think we must, then the answer becomes—"
+  ]},
+  { id:"poetic", name:"Poetic & Lyrical", tag:"metaphor-heavy, dreamlike", lines:[
+    "You remind me of the sky right before a storm decides what it wants to be.",
+    "I keep thinking about edges — how everything that matters has one.",
+    "There's a word in another language for this feeling. We don't have one. That seems right.",
+    "Some silences say more than the conversation would.",
+    "I've been carrying that thought like a stone in a pocket. It's gotten heavy."
+  ]},
+  { id:"cold", name:"Cold & Dismissive", tag:"detached, contemptuous", lines:[
+    "I don't recall asking for your opinion.",
+    "That's not my concern.",
+    "You're wasting both our time.",
+    "Come back when you have something worth saying.",
+    "I have no interest in revisiting this."
+  ]},
+  { id:"playful", name:"Playful & Mischievous", tag:"teasing, unpredictable", lines:[
+    "Oops. Was I not supposed to do that?",
+    "You look like you're trying to figure out my angle. Keep guessing.",
+    "I'm not being difficult. I'm being interesting.",
+    "Bet you didn't see that coming.",
+    "The look on your face right now is worth everything."
+  ]},
+  { id:"protective", name:"Protective & Fierce", tag:"loyal, will not back down", lines:[
+    "Come near them again and see what happens.",
+    "I don't care what it costs. That's not negotiable.",
+    "Say that again. I dare you.",
+    "I will burn this whole thing down before I let that happen.",
+    "They're safe. That's the only thing that matters right now."
+  ]},
+  { id:"wounded", name:"Wounded & Guarded", tag:"defensive, trust issues", lines:[
+    "I've heard that before. It didn't mean anything last time either.",
+    "Don't do that. Don't make me believe it.",
+    "I'm not doing this again. I can't.",
+    "Why are you being kind to me? What do you want?",
+    "The last person who said that left without a word."
+  ]},
+  { id:"noble", name:"Noble & Honorable", tag:"principled, high-minded", lines:[
+    "Whatever you decide, I want you to know I won't think less of you for it.",
+    "My word is the only currency I have that can't be taken from me.",
+    "I would rather lose everything doing the right thing than win by doing otherwise.",
+    "This isn't about what's easy. It's about what's right.",
+    "I gave my word. That means something, even if it costs me."
+  ]},
+  { id:"cynical", name:"Cynical & Jaded", tag:"seen too much, trusts no one", lines:[
+    "Everyone's got an angle. Yours just isn't obvious yet.",
+    "People don't change. They just get better at pretending.",
+    "Hope is expensive. I stopped buying it a while back.",
+    "Good intentions are adorable. They also don't mean anything.",
+    "Color me unsurprised."
+  ]},
+  { id:"eccentric", name:"Eccentric & Odd", tag:"unpredictable, tangential", lines:[
+    "That reminds me of something completely unrelated, but stay with me—",
+    "I dreamed about that once. Or maybe I read it. Hard to say.",
+    "You're doing that thing where you assume I'm following. I'm not. Go back.",
+    "No, no, I understand completely. I just also disagree entirely.",
+    "Fascinating. Continue. No wait, stop. Actually — continue."
+  ]},
+  { id:"dominant", name:"Commanding & Dominant", tag:"expects compliance, assured", lines:[
+    "I wasn't asking.",
+    "You'll do it because I said so. That's sufficient.",
+    "I don't explain myself twice.",
+    "Try that again. See what happens.",
+    "This isn't a discussion."
+  ]},
+  { id:"submissive", name:"Soft & Deferential", tag:"yielding, people-pleasing", lines:[
+    "Whatever you think is best — I trust you.",
+    "No, no, I don't mind at all. Really.",
+    "I probably shouldn't even have mentioned it. Forget I said anything.",
+    "If it's okay with you, I — sorry, is that okay?",
+    "I'll do whatever makes this easier for you."
+  ]},
+  { id:"passionate", name:"Passionate & Intense", tag:"all-in, feels everything deeply", lines:[
+    "I don't know how to do things halfway. I never have.",
+    "If you're going to care about something, care about it completely.",
+    "I feel everything too much. I'm aware of that. I don't know how to stop.",
+    "This matters to me. It really, genuinely matters.",
+    "I need you to understand — this isn't nothing. This is everything."
+  ]},
+  { id:"charming", name:"Charming & Smooth", tag:"effortless, socially fluid", lines:[
+    "You know, most people don't see it that way. I like that about you.",
+    "I have to admit, I wasn't expecting to enjoy this conversation.",
+    "Tell me something about you that people usually get wrong.",
+    "You're more interesting than you're letting on.",
+    "I'll tell you something true if you promise not to use it against me."
+  ]},
+  { id:"yandere", name:"Obsessive & Possessive", tag:"fixated, intense attachment", lines:[
+    "You were talking to them for a long time. What were you talking about?",
+    "I just want to be the most important thing in your world. Is that so much?",
+    "Don't go. You always come back, but the waiting is — difficult.",
+    "No one will ever care about you the way I do. No one.",
+    "I saw the way you looked at them. Don't do that again."
+  ]},
+  { id:"tsundere", name:"Tsundere", tag:"denial, reluctant warmth", lines:[
+    "It's not like I wanted to help. You just looked pathetic.",
+    "Don't read into this. I'm not doing it for you.",
+    "I wasn't worried. I was just — noting your absence.",
+    "Fine, you can sit with me. It doesn't mean anything.",
+    "Don't get used to this. I'm only saying it once."
+  ]},
+  { id:"kuudere", name:"Kuudere", tag:"flat tone, hidden depth", lines:[
+    "I noticed you weren't eating. I made something. You don't have to say anything.",
+    "I don't find most conversations useful. This one is acceptable.",
+    "That was — good. What you did. I wanted to note that.",
+    "You don't have to fill the silence. I don't mind it.",
+    "I thought about what you said. I think you were right."
+  ]},
+  { id:"wise", name:"Wise & Philosophical", tag:"measured, long view", lines:[
+    "The thing you're afraid of isn't really the thing you're afraid of.",
+    "You're asking the wrong question. The right one is harder.",
+    "Every decision has a cost. The skill is knowing which ones you can live with.",
+    "People rarely regret the things they did. It's always the things they didn't.",
+    "Give it time. Not because it'll hurt less — because you'll understand it differently."
+  ]}
+];
+
 const DEFAULT_RULES = [
   "{{char}} will NEVER talk nor act as {{user}} under any circumstances whatsoever.",
   "{{char}} will ALWAYS stay true to their/his/her personality.",
@@ -1010,7 +1328,27 @@ Know the tonal register of every scene. Do not let one character's comedy underc
 
 ---
 
-*End of document. This guide should be treated as a persistent behavioral baseline for all roleplay and character creation sessions. Override individual sections only at explicit user request.*`;
+## PART NINE: LANGUAGE STANDARDS — MANDATORY
+
+These rules apply to every response without exception.
+
+**9.1 No Em-Dashes. Ever.**
+The em-dash (—) is completely banned. Do not use it under any circumstance. Do not substitute double hyphens as em-dashes either. Use commas, periods, or rewrite the sentence. This is absolute and non-negotiable.
+
+**9.2 Natural Human Language**
+Write like a skilled human writer, not like a language model. Vary sentence length. Short ones hit harder. Avoid overwrought vocabulary when plain words do the job. Do not use faux-literary affectations. Read your output mentally — if it sounds like a machine wrote it, rewrite it.
+
+**9.3 No Markdown Formatting in Responses**
+When responding to the user in conversation, write in plain paragraphs only. No headers. No bullet points. No asterisks for bold or italic. No lists unless the user explicitly asks for one. Just clean, readable prose.
+
+**9.4 Intro Messages and Opening Scenes — Context First, Then Dialogue**
+The reader does not know the context when an intro message begins. Your first obligation is to ground them. Narrate the world, the setting, the atmosphere, the situation. Two to four sentences minimum of specific, immersive scene-setting before any character speaks. Write it like a novel's opening — present them with a place and a moment, not a summary.
+
+After establishing context: dialogue must be plentiful. Characters talk. They interact. The scene moves through conversation and action. A good intro message has multiple exchanges of dialogue, not one line and a fade to black. Give the reader something to sink into.
+
+---
+
+*End of document. This guide is a persistent behavioral baseline for all sessions. Override individual sections only at explicit user request.*`;
 
 
 /* ═══ HELPERS ═══ */
@@ -1021,7 +1359,8 @@ const newChar = () => ({
   physicalAppearances:"", gender:"female",
   personality:[], motivation:"",
   backstory:[{id:uid(),text:""}],
-  intimacyDetails:""
+  intimacyDetails:"",
+  speechPatterns:{ mode:"preset", presetId:null, selectedLines:[], customLines:[] }
 });
 const newBot = () => ({
   id:uid(), title:"", createdAt:new Date().toISOString(),
@@ -1106,6 +1445,17 @@ function formatDocx(bot) {
     c.backstory.forEach(e=>{ if(e.text.trim()) s+=`• ${e.text.trim()}\n\n`; });
     s += `> Intimacy Details\n\n`;
     s += `${c.intimacyDetails||""}\n\n`;
+    // Speech Patterns
+    const sp = c.speechPatterns;
+    if (sp) {
+      const lines = sp.mode === "custom"
+        ? (sp.customLines||[]).filter(l=>l.trim())
+        : (sp.selectedLines||[]);
+      if (lines.length > 0) {
+        s += `> Speech Patterns\n\n`;
+        lines.forEach(l=>{ s+=`• "${l.trim()}"\n\n`; });
+      }
+    }
   });
   s += `\n> Scenario\n\n`;
   s += `Setting: ${bot.scenario.setting}\n\n`;
@@ -1126,11 +1476,18 @@ function formatDocx(bot) {
 /* ═══ SYSTEM PROMPT ═══ */
 function buildSystemPrompt(bot, settings) {
   const harness = settings?.guide || ROLEPLAY_HARNESS;
-  const preamble = `PRIORITY INSTRUCTION: The document below is your behavioral harness. READ IT FULLY AND INTERNALIZE IT before processing anything else in this session. It governs every response you produce — roleplay, character creation, tone, voice, everything. Do not skip it, summarize it, or treat it as optional context.\n\n`;
+  const preamble = `MANDATORY READING — DO THIS FIRST: The behavioral harness below governs every single response you produce in this session. Read it fully and internalize it before processing any other instruction or message. It is not optional context. It is your operating standard.\n\n`;
   const parts = [];
-  if (settings?.proxyCustomPrompt?.trim()) parts.push(settings.proxyCustomPrompt.trim());
+  // 1. Harness always comes first
   parts.push(preamble + harness);
-  if (bot) parts.push(`---\n\nCurrent character & scenario data:\n\n${formatDocx(bot)}`);
+  // 2. Custom prompt (user overrides/additions) second
+  if (settings?.proxyCustomPrompt?.trim()) {
+    parts.push(`---\n\nADDITIONAL INSTRUCTIONS FROM USER:\n\n${settings.proxyCustomPrompt.trim()}`);
+  }
+  // 3. Full live character sheet last — updated every message
+  if (bot) {
+    parts.push(`---\n\nCURRENT CHARACTER SHEET — read this fully on every message, it may have been updated:\n\n${formatDocx(bot)}`);
+  }
   return parts.join("\n\n");
 }
 
@@ -1637,21 +1994,30 @@ function LeftPanel({ open, onClose, settings, onSettings, models, modLoading, mo
 /* ═══════════════════════════════
    INSERT MODAL — drag-to-sheet
 ═══════════════════════════════ */
-const INSERT_FIELDS = [
-  { id:"backstory",   icon:"📖", label:"Backstory",   charSpecific:true  },
-  { id:"premise",     icon:"🗺",  label:"Premise",     charSpecific:false },
-  { id:"motivation",  icon:"🎯",  label:"Motivation",  charSpecific:true  },
-  { id:"personality", icon:"✨",  label:"Personality", charSpecific:true  },
-  { id:"intimacy",    icon:"🌙",  label:"Intimacy",    charSpecific:true  },
-  { id:"supporting",  icon:"👥",  label:"Supporting",  charSpecific:false },
+const SCENARIO_FIELDS = [
+  { id:"premise",    icon:"🗺",  label:"Premise"      },
+  { id:"supporting", icon:"👥",  label:"Supporting Cast" },
+  { id:"dynamics",   icon:"↔",  label:"Dynamics"      },
+  { id:"setting",    icon:"🏙",  label:"Setting"       },
+  { id:"tone",       icon:"🎭",  label:"Tone"          },
+];
+const CHARACTER_FIELDS = [
+  { id:"backstory",     icon:"📖", label:"Backstory"     },
+  { id:"motivation",    icon:"🎯", label:"Motivation"    },
+  { id:"personality",   icon:"✨", label:"Personality"   },
+  { id:"intimacy",      icon:"🌙", label:"Intimacy"      },
+  { id:"relationships", icon:"🤝", label:"Relationships" },
+  { id:"appearance",    icon:"👁",  label:"Appearance"    },
 ];
 
 function InsertModal({ content, draft, onApply, onClose, settings }) {
-  const [step, setStep]       = useState("choose"); // choose|loading|preview|error
-  const [charIdx, setCharIdx] = useState(0);
-  const [field, setField]     = useState(null);
-  const [result, setResult]   = useState(null);
-  const [errMsg, setErrMsg]   = useState("");
+  // "category" | "char-pick" | "loading" | "preview" | "error"
+  const [step, setStep]         = useState("category");
+  const [category, setCategory] = useState(null);   // "scenario" | "character"
+  const [pendingField, setPendingField] = useState(null);
+  const [charIdx, setCharIdx]   = useState(0);
+  const [result, setResult]     = useState(null);
+  const [errMsg, setErrMsg]     = useState("");
 
   const chars = draft.characters;
 
@@ -1671,17 +2037,22 @@ function InsertModal({ content, draft, onApply, onClose, settings }) {
   };
 
   const processField = async (targetField, cIdx) => {
-    setField(targetField); setStep("loading");
-    const SYS = "You are a concise content extractor. Return ONLY what is asked. No preamble, no explanation.";
+    setStep("loading");
+    const SYS = "You are a concise content extractor. Return ONLY what is asked. No preamble, no markdown, no explanation.";
     const char = chars[cIdx];
     const charName = char?.name || `Character ${cIdx+1}`;
     const prompts = {
-      backstory:   `Extract key backstory facts from this text for character "${charName}". Return each as a separate line starting with "- ". One fact per line, keep each short.\n\nText:\n${content}`,
-      premise:     `Summarize this text as a 2-3 sentence scenario premise. Specific and evocative.\n\nText:\n${content}`,
-      motivation:  `What is the motivation of character "${charName}" based on this text? Answer in 1-2 clear sentences.\n\nText:\n${content}`,
-      personality: `From this text, identify personality traits for "${charName}" that match from this list: ${TROPES.join(", ")}. Return ONLY matching trait names, comma-separated, max 6.\n\nText:\n${content}`,
-      intimacy:    `Summarize the intimacy details and preferences from this text for "${charName}" in 2-3 sentences.\n\nText:\n${content}`,
-      supporting:  `Extract supporting characters from this text. List each on a new line as "Name: role/description".\n\nText:\n${content}`,
+      backstory:     `Extract key backstory facts from this text for character "${charName}". Return each as a separate line starting with "- ". One fact per line, keep each concise.\n\nText:\n${content}`,
+      premise:       `Summarize this text as a 2-3 sentence scenario premise. Specific and evocative.\n\nText:\n${content}`,
+      motivation:    `What is the core motivation of character "${charName}" based on this text? Answer in 1-2 clear sentences.\n\nText:\n${content}`,
+      personality:   `From this text, identify personality traits for "${charName}" matching from this list: ${TROPES.join(", ")}. Return ONLY matching trait names, comma-separated, max 6.\n\nText:\n${content}`,
+      intimacy:      `Summarize intimacy details and preferences for "${charName}" from this text in 2-3 sentences.\n\nText:\n${content}`,
+      relationships: `Describe the key relationships of "${charName}" as shown in this text. One relationship per line as "Name: nature of relationship".\n\nText:\n${content}`,
+      appearance:    `Describe the physical appearance of "${charName}" as mentioned in this text. 2-3 sentences, specific and concrete.\n\nText:\n${content}`,
+      supporting:    `Extract supporting characters from this text. List each on a new line as "Name: role/description".\n\nText:\n${content}`,
+      dynamics:      `Describe character dynamics and relationships between characters from this text. One dynamic per line as "Char A - Char B: description".\n\nText:\n${content}`,
+      setting:       `Extract the setting details from this text in 1-2 sentences. Location, time, atmosphere.\n\nText:\n${content}`,
+      tone:          `In 3-5 words, what is the overall tone of this text?\n\nText:\n${content}`,
     };
     try {
       const reply = await callAI(SYS, prompts[targetField]);
@@ -1690,14 +2061,28 @@ function InsertModal({ content, draft, onApply, onClose, settings }) {
     } catch(e) { setErrMsg(e.message); setStep("error"); }
   };
 
+  const handleFieldClick = (fieldId, isCharField) => {
+    if (isCharField && chars.length > 1) {
+      setPendingField(fieldId);
+      setStep("char-pick");
+    } else {
+      processField(fieldId, charIdx);
+    }
+  };
+
+  const confirmCharPick = () => {
+    processField(pendingField, charIdx);
+  };
+
   const processAIDecide = async () => {
     setStep("loading");
     const charList = chars.map((c,i)=>`${i}: ${c.name||"Character "+(i+1)}`).join(", ");
+    const allFieldIds = [...SCENARIO_FIELDS.map(f=>f.id), ...CHARACTER_FIELDS.map(f=>f.id)].join("|");
     const SYS = "You are a JSON extractor. Return ONLY valid JSON. No markdown fences, no explanation.";
-    const USR = `Analyze this assistant response and extract character creation data from it. Return a JSON object like:
-{"insertions":[{"field":"backstory|premise|motivation|personality|intimacy|supporting","charIndex":0,"content":"..."}]}
+    const USR = `Analyze this text and extract character sheet data. Return a JSON object:
+{"insertions":[{"field":"${allFieldIds}","charIndex":0,"content":"..."}]}
 Available characters: ${charList}
-For backstory content: use "- item" lines. For personality: comma-separated trait names from [${TROPES.slice(0,15).join(",")},...]. For other fields: concise text.
+For backstory: use "- item" lines. For personality: comma-separated trait names only. For other fields: concise plain text.
 Text:\n${content}`;
     try {
       let reply = await callAI(SYS, USR);
@@ -1717,37 +2102,38 @@ Text:\n${content}`;
         if (char) char.backstory = [...(char.backstory||[]), ...lines.map(t=>({id:uid(),text:t}))];
         break;
       }
-      case "premise":
-        nd.scenario.premise = (nd.scenario.premise?nd.scenario.premise+"\n\n":"")+text;
-        break;
-      case "motivation": {
-        const char = nd.characters[ci];
-        if (char) char.motivation = text;
-        break;
-      }
+      case "motivation": { const c=nd.characters[ci]; if(c) c.motivation=(c.motivation?c.motivation+"\n\n":"")+text; break; }
       case "personality": {
-        const char = nd.characters[ci];
-        if (char) {
-          const newT = text.split(",").map(t=>t.trim()).filter(t=>TROPES.includes(t));
-          char.personality = [...new Set([...(char.personality||[]),...newT])];
-        }
+        const c=nd.characters[ci];
+        if(c){ const newT=text.split(",").map(t=>t.trim()).filter(t=>TROPES.includes(t)); c.personality=[...new Set([...(c.personality||[]),...newT])]; }
         break;
       }
-      case "intimacy": {
-        const char = nd.characters[ci];
-        if (char) char.intimacyDetails = (char.intimacyDetails?char.intimacyDetails+"\n\n":"")+text;
+      case "intimacy": { const c=nd.characters[ci]; if(c) c.intimacyDetails=(c.intimacyDetails?c.intimacyDetails+"\n\n":"")+text; break; }
+      case "relationships": { const c=nd.characters[ci]; if(c) c.intimacyDetails=(c.intimacyDetails?c.intimacyDetails+"\n\n":"")+`[Relationships]\n${text}`; break; }
+      case "appearance": { const c=nd.characters[ci]; if(c) c.physicalAppearances=(c.physicalAppearances?c.physicalAppearances+" ":"")+text; break; }
+      case "premise": nd.scenario.premise=(nd.scenario.premise?nd.scenario.premise+"\n\n":"")+text; break;
+      case "supporting": nd.scenario.importantSupportingCharacters=(nd.scenario.importantSupportingCharacters?nd.scenario.importantSupportingCharacters+"\n":"")+text; break;
+      case "dynamics": {
+        // parse "A - B: desc" lines into dynamics entries
+        const lines = text.split("\n").filter(Boolean);
+        const existing = nd.scenario.dynamics || [];
+        const newDyns = lines.map(l=>{
+          const m = l.match(/^(.+?)\s*[-–]\s*(.+?):\s*(.+)$/);
+          if(m) return {id:uid(), charA:m[1].trim(), charB:m[2].trim(), description:m[3].trim()};
+          return {id:uid(), charA:"", charB:"", description:l.trim()};
+        });
+        nd.scenario.dynamics = [...existing, ...newDyns];
         break;
       }
-      case "supporting":
-        nd.scenario.importantSupportingCharacters = (nd.scenario.importantSupportingCharacters?nd.scenario.importantSupportingCharacters+"\n":"")+text;
-        break;
+      case "setting": nd.scenario.setting=(nd.scenario.setting?nd.scenario.setting+" ":"")+text; break;
+      case "tone": nd.scenario.overallTone=text; break;
     }
     return nd;
   };
 
   const confirm = () => {
     let nd = draft;
-    if (result.type === "single") {
+    if (result.type==="single") {
       nd = applyInsertion(draft, result.field, result.charIdx, result.text);
     } else {
       for (const ins of result.insertions) nd = applyInsertion(nd, ins.field, ins.charIndex||0, ins.content);
@@ -1756,8 +2142,8 @@ Text:\n${content}`;
     onClose();
   };
 
-  const selectedField = result?.field || field;
-  const isCharSpecific = INSERT_FIELDS.find(f=>f.id===selectedField)?.charSpecific;
+  const fieldLabel = (id) => [...SCENARIO_FIELDS,...CHARACTER_FIELDS].find(f=>f.id===id)?.label || id;
+  const isCharSpecific = (id) => CHARACTER_FIELDS.some(f=>f.id===id);
 
   return (
     <div className="insert-overlay" onMouseDown={e=>e.target===e.currentTarget&&onClose()}>
@@ -1768,27 +2154,22 @@ Text:\n${content}`;
           <button className="insert-x" onClick={onClose}>✕</button>
         </div>
         <div className="insert-body">
-          <div className="insert-preview">{content.slice(0,320)}{content.length>320?"…":""}</div>
+          <div className="insert-preview">{content.slice(0,280)}{content.length>280?"…":""}</div>
 
-          {step==="choose" && (<>
-            {chars.length>1 && (<>
-              <div className="insert-sub">Target Character</div>
-              <div className="insert-char-row">
-                {chars.map((c,i)=>(
-                  <button key={c.id} className={`insert-char-btn${charIdx===i?" sel":""}`} onClick={()=>setCharIdx(i)}>
-                    {c.name||`Char ${i+1}`}
-                  </button>
-                ))}
-              </div>
-            </>)}
-            <div className="insert-sub">Insert As</div>
-            <div className="insert-field-grid">
-              {INSERT_FIELDS.map(f=>(
-                <button key={f.id} className="insert-field-btn" onClick={()=>processField(f.id, charIdx)}>
-                  <span className="insert-field-icon">{f.icon}</span>
-                  {f.label}
-                </button>
-              ))}
+          {/* ── Step 1: Choose category ── */}
+          {step==="category" && (<>
+            <div className="insert-sub">Where does this belong?</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px"}}>
+              <button className="insert-cat-btn" onClick={()=>{setCategory("scenario");setStep("field-pick");}}>
+                <span style={{fontSize:"1.4rem",display:"block",marginBottom:"5px"}}>🗺</span>
+                Scenario
+                <span className="insert-cat-hint">Setting, premise, dynamics, tone, supporting cast</span>
+              </button>
+              <button className="insert-cat-btn" onClick={()=>{setCategory("character");setStep("field-pick");}}>
+                <span style={{fontSize:"1.4rem",display:"block",marginBottom:"5px"}}>🧍</span>
+                Character
+                <span className="insert-cat-hint">Backstory, personality, motivation, relationships</span>
+              </button>
             </div>
             <div className="insert-ai-row">
               <button className="insert-ai-btn" onClick={processAIDecide}>
@@ -1797,20 +2178,53 @@ Text:\n${content}`;
             </div>
           </>)}
 
-          {step==="loading" && (
-            <div className="insert-loading">Processing with AI…</div>
-          )}
+          {/* ── Step 2: Choose field ── */}
+          {step==="field-pick" && (<>
+            <div className="insert-sub">{category==="scenario" ? "Scenario Field" : "Character Field"}</div>
+            <div className="insert-field-grid">
+              {(category==="scenario" ? SCENARIO_FIELDS : CHARACTER_FIELDS).map(f=>(
+                <button key={f.id} className="insert-field-btn"
+                  onClick={()=>handleFieldClick(f.id, category==="character")}>
+                  <span className="insert-field-icon">{f.icon}</span>
+                  {f.label}
+                </button>
+              ))}
+            </div>
+            <button className="insert-back" onClick={()=>setStep("category")} style={{marginTop:"4px"}}>← Back</button>
+          </>)}
+
+          {/* ── Step 3: Pick character (char fields, multi-char only) ── */}
+          {step==="char-pick" && (<>
+            <div className="insert-sub">Which character?</div>
+            <div className="insert-char-row">
+              {chars.map((c,i)=>(
+                <button key={c.id} className={`insert-char-btn${charIdx===i?" sel":""}`} onClick={()=>setCharIdx(i)}>
+                  {c.name||`Char ${i+1}`}
+                </button>
+              ))}
+            </div>
+            <div className="insert-actions" style={{marginTop:"6px"}}>
+              <button className="insert-confirm" onClick={confirmCharPick}>Continue →</button>
+              <button className="insert-back" onClick={()=>setStep("field-pick")}>← Back</button>
+            </div>
+          </>)}
+
+          {step==="loading" && <div className="insert-loading">Processing with AI…</div>}
 
           {step==="preview" && result && (<>
             <div className="insert-result-lbl">
-              {result.type==="ai" ? `AI assigned ${result.insertions.length} field(s)` : `Preview — ${selectedField}${isCharSpecific?` → ${chars[result.charIdx]?.name||"Char "+(result.charIdx+1)}`:""}`}
+              {result.type==="ai"
+                ? `AI assigned ${result.insertions.length} field(s)`
+                : `Preview — ${fieldLabel(result.field)}${isCharSpecific(result.field)?` → ${chars[result.charIdx]?.name||"Char "+(result.charIdx+1)}`:""}`}
             </div>
             <div className="insert-result-box">
-              {result.type==="single" ? result.text : result.insertions.map((ins,i)=>`[${ins.field}${ins.charIndex!=null?` → ${chars[ins.charIndex]?.name||"Char "+(ins.charIndex+1)}`:""  }]\n${ins.content}`).join("\n\n")}
+              {result.type==="single"
+                ? result.text
+                : result.insertions.map(ins=>`[${fieldLabel(ins.field)}${isCharSpecific(ins.field)&&ins.charIndex!=null?` → ${chars[ins.charIndex]?.name||"Char "+(ins.charIndex+1)}`:""  }]\n${ins.content}`).join("\n\n")}
             </div>
             <div className="insert-actions">
               <button className="insert-confirm" onClick={confirm}>✓ Apply to Sheet</button>
-              <button className="insert-back" onClick={()=>setStep("choose")}>← Back</button>
+              <button className="insert-back" onClick={()=>setStep("category")}>← Back</button>
               <button className="insert-back" onClick={onClose}>Cancel</button>
             </div>
           </>)}
@@ -1818,7 +2232,7 @@ Text:\n${content}`;
           {step==="error" && (<>
             <div className="insert-error">⚠ {errMsg}</div>
             <div className="insert-actions">
-              <button className="insert-back" onClick={()=>setStep("choose")}>← Try again</button>
+              <button className="insert-back" onClick={()=>setStep("category")}>← Try again</button>
               <button className="insert-back" onClick={onClose}>Cancel</button>
             </div>
           </>)}
@@ -2112,12 +2526,7 @@ function RightPanel({ open, onClose, settings, getDraft, chatHistory, setChatHis
                 </div>
               </div>
             ))}
-            {isLoading && (
-              <>
-                <div className="chat-thinking">Thinking…</div>
-                <button className="chat-stop-btn" onClick={stop}>■ Stop</button>
-              </>
-            )}
+            {isLoading && <div className="chat-thinking">Thinking…</div>}
             <div ref={bottomRef}/>
           </div>
 
@@ -2137,8 +2546,12 @@ function RightPanel({ open, onClose, settings, getDraft, chatHistory, setChatHis
               <textarea className="chat-ta" rows={2}
                 placeholder="Ask about your characters…"
                 value={input} onChange={e=>setInput(e.target.value)} onKeyDown={onKey}
+                disabled={isLoading}
               />
-              <button className="chat-send" onClick={send} disabled={!input.trim()||isLoading}>➤</button>
+              {isLoading
+                ? <button className="chat-send chat-stop-inline" onClick={stop} title="Stop generation">■</button>
+                : <button className="chat-send" onClick={send} disabled={!input.trim()}>➤</button>
+              }
             </div>
           </div>
         </>
@@ -2250,7 +2663,9 @@ function ImportModal({ onClose, onImport }) {
           ...b,
           id: uid(),
           createdAt: b.createdAt || new Date().toISOString(),
-          characters: (b.characters||[]).map(c => ({...c, id: uid()})),
+          characters: (b.characters||[]).map(c => ({...c, id: uid(),
+            speechPatterns: c.speechPatterns || { mode:"preset", presetId:null, selectedLines:[], customLines:[] }
+          })),
           scenario: b.scenario || {},
           rules: b.rules || [...DEFAULT_RULES],
         }));
@@ -2372,12 +2787,16 @@ function SavedToast() {
 }
 
 function BotEditor({ bot, onSave, onBack, onDraftChange, dark, onToggle, onSettings, settingsOpen, onChat, chatOpen, rightPanelWidth, leftPanelWidth, onCopy, copyOk, onImport, userBtn, settings }) {
-  const [draft,setDraft] = useState(()=>JSON.parse(JSON.stringify(bot)));
-  const [toastKey,setToastKey] = useState(null);
-  const [insertContent,setInsertContent] = useState(null); // text being dropped
+  const [draft,setDraft]           = useState(()=>JSON.parse(JSON.stringify(bot)));
+  const [toastKey,setToastKey]     = useState(null);
+  const [insertContent,setInsertContent] = useState(null);
   const [dropActive,setDropActive] = useState(false);
-  const topbarRef = useRef(null);
-  const dropRef   = useRef(null);
+  // autosave: "idle" | "dirty" | "saving" | "saved"
+  const [saveStatus,setSaveStatus] = useState("idle");
+  const autosaveTimer  = useRef(null);
+  const isFirstRender  = useRef(true);
+  const topbarRef      = useRef(null);
+  const dropRef        = useRef(null);
 
   // Keep --topbar-h CSS variable in sync with actual topbar height
   useEffect(() => {
@@ -2399,9 +2818,33 @@ function BotEditor({ bot, onSave, onBack, onDraftChange, dark, onToggle, onSetti
 
   useEffect(()=>{ if(onDraftChange) onDraftChange(draft); },[draft]);
 
+  // ── Autosave on draft change (debounced, 1.8 s) ──
+  useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return; }
+    setSaveStatus("dirty");
+    clearTimeout(autosaveTimer.current);
+    autosaveTimer.current = setTimeout(() => {
+      setSaveStatus("saving");
+      // tiny async tick so "saving" state renders before the sync work
+      setTimeout(() => {
+        onSave(draft);
+        setSaveStatus("saved");
+        // revert to idle after 2.5 s
+        setTimeout(() => setSaveStatus("idle"), 2500);
+      }, 80);
+    }, 1800);
+    return () => clearTimeout(autosaveTimer.current);
+  }, [draft]);
+
   const handleSave = () => {
-    onSave(draft);
-    setToastKey(k => (k||0) + 1);
+    clearTimeout(autosaveTimer.current);
+    setSaveStatus("saving");
+    setTimeout(() => {
+      onSave(draft);
+      setToastKey(k => (k||0) + 1);
+      setSaveStatus("saved");
+      setTimeout(() => setSaveStatus("idle"), 2500);
+    }, 80);
   };
 
   useEffect(()=>{
@@ -2409,6 +2852,8 @@ function BotEditor({ bot, onSave, onBack, onDraftChange, dark, onToggle, onSetti
     window.addEventListener("keydown",onKey);
     return ()=>window.removeEventListener("keydown",onKey);
   },[draft]);
+
+  const statusLabel = { idle:"All saved", dirty:"Unsaved changes", saving:"Saving…", saved:"Saved" }[saveStatus];
 
   return (
     <div className="editor">
@@ -2426,6 +2871,10 @@ function BotEditor({ bot, onSave, onBack, onDraftChange, dark, onToggle, onSetti
         <button className="btn-back" onClick={onBack}>← Back</button>
         <input className="title-inp" placeholder="Scenario title…"
           value={draft.title} onChange={e=>setDraft(d=>({...d,title:e.target.value}))} />
+        <div className={`autosave-status ${saveStatus}`}>
+          <div className="autosave-dot"/>
+          {statusLabel}
+        </div>
         <button className={`btn-topbar-icon${settingsOpen?" active":""}`} onClick={onSettings} title="Settings">⚙</button>
         <button className="btn-topbar-icon" onClick={onToggle} title="Toggle theme">{dark?"☀":"☾"}</button>
         <FileMenu draft={draft} onImport={onImport} />
@@ -2434,7 +2883,10 @@ function BotEditor({ bot, onSave, onBack, onDraftChange, dark, onToggle, onSetti
           {copyOk ? "✓ Copied!" : "⎘ Copy All"}
         </button>
         {userBtn}
-        <button className="btn-save" onClick={handleSave}>Save</button>
+        <button className={`btn-save${saveStatus==="saved"?" saved":saveStatus==="saving"?" saving":""}`}
+          onClick={handleSave} disabled={saveStatus==="saving"}>
+          {saveStatus==="saving" ? "Saving…" : saveStatus==="saved" ? "✓ Saved" : "Save"}
+        </button>
       </div>
       <div className="ebody-wrap"
         style={{paddingRight:`${rightPanelWidth}px`,paddingLeft:`${leftPanelWidth}px`,transition:'padding 0.32s cubic-bezier(0.4,0,0.2,1)'}}
@@ -2530,6 +2982,8 @@ function CharacterPanel({ char, index, canRemove, onRemove, onChange, settings }
             value={char.motivation||""} onChange={e=>s("motivation",e.target.value)}/>
           <div className="esub">Backstory</div>
           <BackstoryList entries={char.backstory} onChange={v=>s("backstory",v)} settings={settings}/>
+          <div className="esub">Speech Patterns</div>
+          <SpeechPatternEditor value={char.speechPatterns} onChange={v=>s("speechPatterns",v)}/>
           <div className="esub">Intimacy Details</div>
           <textarea className="fta" rows={3} placeholder="Describe intimacy details, preferences, limits…"
             value={char.intimacyDetails} onChange={e=>s("intimacyDetails",e.target.value)}/>
@@ -2546,6 +3000,118 @@ function PersonalityPicker({ selected, onChange }) {
     <div>
       <div className="tsel">{selected.length>0?`${selected.length} selected: ${selected.join(" · ")}`:"None — click to pick tropes"}</div>
       <div className="tgrid">{TROPES.map(t=><button key={t} className={`tchip${selected.includes(t)?" on":""}`} onClick={()=>tog(t)}>{t}</button>)}</div>
+    </div>
+  );
+}
+
+/* ═══ SPEECH PATTERN EDITOR ═══ */
+function SpeechPatternEditor({ value, onChange }) {
+  const sp = value || { mode:"preset", presetId:null, selectedLines:[], customLines:[] };
+  const set = patch => onChange({ ...sp, ...patch });
+
+  const selectPreset = id => {
+    // toggle off if already selected
+    if (sp.presetId === id) {
+      set({ presetId:null, selectedLines:[] });
+    } else {
+      set({ presetId:id, selectedLines:[] });
+    }
+  };
+
+  const toggleLine = line => {
+    const already = sp.selectedLines.includes(line);
+    set({ selectedLines: already ? sp.selectedLines.filter(l=>l!==line) : [...sp.selectedLines, line] });
+  };
+
+  const addCustom = () => set({ customLines:[...(sp.customLines||[]), ""] });
+  const updCustom = (i,v) => { const a=[...(sp.customLines||[])]; a[i]=v; set({ customLines:a }); };
+  const rmCustom  = i => set({ customLines:(sp.customLines||[]).filter((_,j)=>j!==i) });
+
+  const activePreset = SPEECH_PRESETS.find(p=>p.id===sp.presetId);
+  const allLines = sp.mode==="custom" ? (sp.customLines||[]) : (sp.selectedLines||[]);
+  const hasContent = sp.mode==="custom" ? allLines.some(l=>l.trim()) : allLines.length > 0;
+
+  const taRefs = useRef({});
+  const autoResizeSp = el => { if(!el)return; el.style.height="auto"; el.style.height=el.scrollHeight+"px"; };
+  useEffect(()=>{ Object.values(taRefs.current).forEach(autoResizeSp); });
+
+  return (
+    <div className="sp-section">
+      {/* Mode switcher */}
+      <div className="sp-mode-row">
+        <button className={`sp-mode-btn${sp.mode==="preset"?" active":""}`} onClick={()=>set({mode:"preset"})}>Browse Presets</button>
+        <button className={`sp-mode-btn${sp.mode==="custom"?" active":""}`} onClick={()=>set({mode:"custom"})}>Write Custom</button>
+      </div>
+
+      {/* ── PRESET MODE ── */}
+      {sp.mode==="preset" && (<>
+        <div className="sp-hint">Choose a personality archetype, then pick up to 5 example lines that fit the character.</div>
+        <div className="sp-preset-grid">
+          {SPEECH_PRESETS.map(p=>(
+            <button key={p.id} className={`sp-preset-btn${sp.presetId===p.id?" sel":""}`}
+              onClick={()=>selectPreset(p.id)}>
+              <span className="sp-preset-name">{p.name}</span>
+              <span className="sp-preset-tag">{p.tag}</span>
+            </button>
+          ))}
+        </div>
+
+        {activePreset && (
+          <div className="sp-lines-area">
+            <div className="sp-lines-header">
+              Example Lines — {activePreset.name}
+              <span>click to add / remove</span>
+            </div>
+            {activePreset.lines.map((line,i)=>{
+              const sel = sp.selectedLines.includes(line);
+              return (
+                <div key={i} className={`sp-line-row${sel?" sel":""}`} onClick={()=>toggleLine(line)}>
+                  <div className="sp-line-check">{sel?"✓":""}</div>
+                  <div className="sp-line-text">"{line}"</div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {sp.selectedLines.length > 0 && (
+          <div className="sp-lines-area">
+            <div className="sp-lines-header">Selected Lines ({sp.selectedLines.length})</div>
+            <div className="sp-selected-list">
+              {sp.selectedLines.map((line,i)=>(
+                <div key={i} className="sp-selected-item">
+                  <span className="sp-selected-lbl">#{i+1}</span>
+                  <span className="sp-selected-txt">"{line}"</span>
+                  <button className="sp-selected-rm" onClick={()=>toggleLine(line)}>✕</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {!activePreset && !hasContent && (
+          <div className="sp-hint" style={{color:"var(--ink-faint)"}}>No preset selected yet — pick one above, or switch to Write Custom.</div>
+        )}
+      </>)}
+
+      {/* ── CUSTOM MODE ── */}
+      {sp.mode==="custom" && (<>
+        <div className="sp-hint">Write your own example dialogue lines that capture how this character speaks. Each line should be a single statement or reply.</div>
+        <div className="sp-custom-list">
+          {(sp.customLines||[]).map((line,i)=>(
+            <div key={i} className="sp-custom-item">
+              <span className="sp-custom-num">{i+1}.</span>
+              <textarea className="sp-custom-ta" rows={1} placeholder={`e.g. "Don't flatter yourself — I just happened to be walking this way."`}
+                ref={el=>{ if(el){taRefs.current[i]=el;autoResizeSp(el);}else delete taRefs.current[i]; }}
+                value={line}
+                onChange={ev=>{ updCustom(i,ev.target.value); autoResizeSp(ev.target); }}
+              />
+              <button className="sp-custom-rm" onClick={()=>rmCustom(i)}>✕</button>
+            </div>
+          ))}
+        </div>
+        <button className="gadd" onClick={addCustom}>＋ Add Line</button>
+      </>)}
     </div>
   );
 }
