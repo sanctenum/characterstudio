@@ -2090,21 +2090,21 @@ function InsertModal({ content, draft, onApply, onClose, settings }) {
 
   const processField = async (targetField, cIdx) => {
     setStep("loading");
-    const SYS = "You are a concise content extractor. Return ONLY what is asked. No preamble, no markdown, no explanation.";
+    const SYS = "You are a character sheet extractor. Copy relevant details faithfully from the source text — do not invent, embellish, or pad. Do not add filler phrases, commentary, or explanation. Use only what is explicitly present or clearly implied. Return only the extracted content.";
     const char = chars[cIdx];
     const charName = char?.name || `Character ${cIdx+1}`;
     const prompts = {
-      backstory:     `Extract key backstory facts from this text for character "${charName}". Return each as a separate line starting with "- ". One fact per line, keep each concise.\n\nText:\n${content}`,
-      premise:       `Write a detailed scenario premise based on this text. The premise must be substantial — at minimum 4-6 sentences. It must cover ALL of the following:\n1. Who {{user}} is in this scenario — their role, background, and how they fit into the world\n2. Who the character(s) are and what defines them in this context\n3. What is currently happening — the active situation or conflict\n4. How these events connect {{user}} to the character(s) — why they are together, what brought them here\n5. The emotional or dramatic stakes — what is at risk, what either party wants or needs\n\nWrite in present tense, second person for {{user}} ("{{user}} is…"), third person for characters. Be specific and evocative, not vague. Do not summarize — write it as it would appear in a character sheet.\n\nText:\n${content}`,
-      motivation:    `What is the core motivation of character "${charName}" based on this text? Answer in 1-2 clear sentences.\n\nText:\n${content}`,
+      backstory:     `Extract backstory facts for "${charName}" from this text. One fact per line starting with "- ". Keep each line tight — just the fact, no elaboration. Only include what is actually in the text.\n\nText:\n${content}`,
+      premise:       `Write the scenario premise from this text. Cover: who {{user}} is and their role, who the character(s) are, what is happening, how {{user}} and the character(s) are connected, and what the stakes are. 3-5 sentences. Use present tense. Second person for {{user}}, third person for characters. Stay close to what the text says — do not invent details.\n\nText:\n${content}`,
+      motivation:    `What drives "${charName}" in this text? 1-2 sentences. State it directly, no padding.\n\nText:\n${content}`,
       personality:   `From this text, identify personality traits for "${charName}" matching from this list: ${TROPES.join(", ")}. Return ONLY matching trait names, comma-separated, max 6.\n\nText:\n${content}`,
-      intimacy:      `Extract and format the intimacy details for "${charName}" from this text. Structure the output exactly like this template — use the same field labels, preserve the tone, and be explicit and specific:\n\nExperience: [their level of experience]\nSexual Preferences: [specific acts, kinks, or preferences they enjoy]\nDesires: [what they emotionally and physically want from a partner — be detailed, include their psychological needs, not just physical ones]\nMoans: [their actual vocalization sounds written phonetically, e.g. AHHN~! OHHH~! etc.]\n\nIf a field is not mentioned in the text, leave it blank but still include the label. Do not add explanation or preamble.\n\nText:\n${content}`,
-      relationships: `Describe the key relationships of "${charName}" as shown in this text. One relationship per line as "Name: nature of relationship".\n\nText:\n${content}`,
-      appearance:    `Describe the physical appearance of "${charName}" as mentioned in this text. 2-3 sentences, specific and concrete.\n\nText:\n${content}`,
-      supporting:    `Extract supporting characters from this text. List each on a new line as "Name: role/description".\n\nText:\n${content}`,
-      dynamics:      `Describe character dynamics and relationships between characters from this text. One dynamic per line as "Char A - Char B: description".\n\nText:\n${content}`,
-      setting:       `Extract the setting details from this text in 1-2 sentences. Location, time, atmosphere.\n\nText:\n${content}`,
-      tone:          `In 3-5 words, what is the overall tone of this text?\n\nText:\n${content}`,
+      intimacy:      `Extract intimacy details for "${charName}" from this text. Use exactly this format — fill only what the text mentions, leave the rest blank:\n\nExperience: \nSexual Preferences: \nDesires: \nMoans: \n\nFor Desires: one or two sentences on what they want emotionally and physically. For Moans: phonetic sounds only (e.g. AHHN~! OHH~!). No extra commentary.\n\nText:\n${content}`,
+      relationships: `List the key relationships of "${charName}" from this text. One per line: "Name: relationship description". Keep descriptions brief.\n\nText:\n${content}`,
+      appearance:    `Describe "${charName}"'s physical appearance as stated in this text. 2-3 sentences, stick to what is mentioned.\n\nText:\n${content}`,
+      supporting:    `List supporting characters from this text. One per line: "Name: role or brief description".\n\nText:\n${content}`,
+      dynamics:      `Extract character dynamics from this text. One per line: "Char A - Char B: brief description".\n\nText:\n${content}`,
+      setting:       `Extract the setting from this text in 1-2 sentences. Location, time period, atmosphere — only what is stated.\n\nText:\n${content}`,
+      tone:          `In 3-5 words, what is the tone of this text?\n\nText:\n${content}`,
     };
     try {
       const reply = await callAI(SYS, prompts[targetField]);
@@ -2131,16 +2131,17 @@ function InsertModal({ content, draft, onApply, onClose, settings }) {
     const charList = chars.map((c,i)=>`${i}: ${c.name||"Character "+(i+1)}`).join(", ");
     const allFieldIds = [...SCENARIO_FIELDS.map(f=>f.id), ...CHARACTER_FIELDS.map(f=>f.id)].join("|");
     const SYS = "You are a JSON extractor. Return ONLY valid JSON. No markdown fences, no explanation.";
-    const USR = `Analyze this text and extract character sheet data. Return a JSON object:
+    const USR = `Extract character sheet data from this text. Return a JSON object:
 {"insertions":[{"field":"${allFieldIds}","charIndex":0,"content":"..."}]}
 Available characters: ${charList}
 
-Field-specific instructions:
-- backstory: use "- item" lines, one fact per line
+Rules:
+- Only extract what is actually in the text. Do not invent or pad.
+- backstory: "- fact" lines, one per line, tight
 - personality: comma-separated trait names only from the allowed list
-- intimacy: use this exact structure: "Experience: ...\nSexual Preferences: ...\nDesires: ...\nMoans: ..." — be explicit and detailed for Desires, use phonetic sounds for Moans
-- premise: write 4-6 sentences minimum; include who {{user}} is and their role, who the character(s) are, what is actively happening, how events connect {{user}} to the character(s), and the emotional stakes — write in present tense, second person for {{user}}, third person for characters; do NOT be vague or brief
-- all other fields: specific plain text
+- intimacy: use this structure exactly: "Experience: \nSexual Preferences: \nDesires: \nMoans: " — fill only what is present; Desires in 1-2 sentences, Moans as phonetic sounds
+- premise: 3-5 sentences covering who {{user}} is, who the character(s) are, what is happening, how they connect, and the stakes — present tense, stay close to the source
+- all other fields: direct plain text, no filler
 
 Text:\n${content}`;
     try {
