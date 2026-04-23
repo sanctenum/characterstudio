@@ -746,6 +746,7 @@
     }
     .msg-act-btn:hover { border-color:var(--paper-line); color:var(--ink); }
     .msg-act-btn.danger:hover { color:var(--red); border-color:var(--red); }
+    .msg-act-btn.ok { color:#2c6e3a; border-color:#2c6e3a; }
     .msg-drag-hint {
       margin-left:auto; font-family:'Courier Prime',monospace; font-size:0.55rem;
       color:var(--ink-faint); letter-spacing:0.5px; cursor:grab; user-select:none;
@@ -2340,6 +2341,7 @@ function RightPanel({ open, onClose, settings, getDraft, chatHistory, setChatHis
   const [isFullscreen,setFs]     = useState(false);
   const [lastWidth,setLastWidth]  = useState(panelWidth);
   const [draggingIdx,setDraggingIdx] = useState(null);
+  const [copiedIdx,setCopiedIdx]  = useState(null);
   const bottomRef  = useRef(null);
   const panelRef   = useRef(null);
   const handleRef  = useRef(null);
@@ -2510,7 +2512,12 @@ function RightPanel({ open, onClose, settings, getDraft, chatHistory, setChatHis
     } finally { setLoading(false); abortRef.current=null; }
   };
 
-  const onKey = e => { if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();} };
+  const copyMsg = (text, idx) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedIdx(idx);
+      setTimeout(() => setCopiedIdx(c => c === idx ? null : c), 2000);
+    });
+  };
   const modelShort = settings.selectedModel?.split("/").pop() || settings.selectedModel || "—";
 
   return (
@@ -2575,6 +2582,11 @@ function RightPanel({ open, onClose, settings, getDraft, chatHistory, setChatHis
                   {m.role==="assistant" && (
                     <>
                       <span className="msg-drag-hint" title="Drag to character sheet">⠿ drag to sheet</span>
+                      <button
+                        className={`msg-act-btn${copiedIdx===i?" ok":""}`}
+                        onClick={()=>copyMsg(m.content||"", i)}
+                        title="Copy message"
+                      >{copiedIdx===i ? "✓ Copied" : "⎘ Copy"}</button>
                       {i===chatHistory.length-1 && !isLoading && (
                         <button className="msg-act-btn" onClick={reroll} title="Reroll this response">↺ Reroll</button>
                       )}
