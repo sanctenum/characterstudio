@@ -2129,7 +2129,7 @@ function InsertModal({ content, draft, onApply, onClose, settings }) {
       body:JSON.stringify({
         model: settings.selectedModel,
         messages:[{role:"system",content:sysPmt},{role:"user",content:userPmt}],
-        max_tokens:900, stream:false
+        max_tokens: Math.max(settings.proxyMaxTokens || 1024, 4000), stream:false
       })
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
