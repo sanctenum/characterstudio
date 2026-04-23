@@ -864,7 +864,24 @@
     .bs-shorten-btn:hover { border-color:var(--red); color:var(--red); }
     .bs-shorten-btn:disabled { opacity:0.4; cursor:default; }
 
-    /* ── Speech Patterns ── */
+    /* ── Token count badge ── */
+    .token-badge {
+      font-family:'Courier Prime',monospace; font-size:0.58rem; text-transform:uppercase;
+      letter-spacing:1px; color:var(--ink-faint); background:var(--paper-dark);
+      border:1px solid var(--paper-line); padding:2px 7px; white-space:nowrap;
+      user-select:none; flex-shrink:0;
+    }
+    .token-badge.warn  { color:#b87c20; border-color:#b87c20; }
+    .token-badge.over  { color:var(--red); border-color:var(--red); }
+    .total-token-pill {
+      font-family:'Courier Prime',monospace; font-size:0.62rem; text-transform:uppercase;
+      letter-spacing:1px; color:var(--ink-faint); white-space:nowrap; flex-shrink:0;
+      display:flex; align-items:center; gap:4px;
+    }
+    .total-token-pill.warn { color:#b87c20; }
+    .total-token-pill.over { color:var(--red); }
+
+
     .sp-section { display:flex; flex-direction:column; gap:10px; }
     .sp-mode-row { display:flex; gap:0; border:1.5px solid var(--paper-line); overflow:hidden; align-self:flex-start; }
     .sp-mode-btn {
@@ -1473,7 +1490,41 @@ function formatDocx(bot) {
   return s;
 }
 
-/* ═══ SYSTEM PROMPT ═══ */
+/* ═══ TOKEN COUNTER ═══ */
+// GPT-family approximation: ~4 chars per token
+const countTokens = str => Math.ceil((str || "").length / 4);
+
+const fmtTokens = n => n >= 1000 ? `${(n/1000).toFixed(1)}k` : `${n}`;
+
+/* returns the formatted text for a single character only */
+function formatCharDocx(c, idx) {
+  let s = `# Character ${idx+1}\n\n`;
+  s += `> Basic Information\n\n`;
+  s += `Name: ${c.name}\n\n`;
+  s += `Gender: ${c.gender}\n\n`;
+  s += `Age: ${c.age}\n\n`;
+  s += `Height: ${c.height}\n\n`;
+  s += `Physical Appearances: ${c.physicalAppearances}\n\n`;
+  s += `Personality: ${c.personality.join(", ")}\n\n`;
+  s += `Motivation: ${c.motivation||""}\n\n`;
+  s += `> Backstory\n\n`;
+  c.backstory.forEach(e=>{ if(e.text.trim()) s+=`• ${e.text.trim()}\n\n`; });
+  s += `> Intimacy Details\n\n`;
+  s += `${c.intimacyDetails||""}\n\n`;
+  const sp = c.speechPatterns;
+  if (sp) {
+    const lines = sp.mode === "custom"
+      ? (sp.customLines||[]).filter(l=>l.trim())
+      : (sp.selectedLines||[]);
+    if (lines.length > 0) {
+      s += `> Speech Patterns\n\n`;
+      lines.forEach(l=>{ s+=`• "${l.trim()}"\n\n`; });
+    }
+  }
+  return s;
+}
+
+
 function buildSystemPrompt(bot, settings) {
   const harness = settings?.guide || ROLEPLAY_HARNESS;
   const preamble = `MANDATORY READING — DO THIS FIRST: The behavioral harness below governs every single response you produce in this session. Read it fully and internalize it before processing any other instruction or message. It is not optional context. It is your operating standard.\n\n`;
@@ -2886,6 +2937,16 @@ function BotEditor({ bot, onSave, onBack, onDraftChange, dark, onToggle, onSetti
         <button className="btn-topbar-icon" onClick={onToggle} title="Toggle theme">{dark?"☀":"☾"}</button>
         <FileMenu draft={draft} onImport={onImport} />
         <button className={`btn-topbar-text${chatOpen?" active":""}`} onClick={onChat}>✦ Assistant</button>
+        {(() => {
+          const totalText  = formatDocx(draft);
+          const totalTok   = countTokens(totalText);
+          const cls        = totalTok > 3000 ? "over" : totalTok > 2000 ? "warn" : "";
+          return (
+            <span className={`total-token-pill${cls?" "+cls:""}`} title="Approximate total tokens for the full copied character sheet">
+              ~{fmtTokens(totalTok)} tok
+            </span>
+          );
+        })()}
         <button className={`btn-topbar-text${copyOk?" ok":""}`} onClick={onCopy} title="Copy all to clipboard">
           {copyOk ? "✓ Copied!" : "⎘ Copy All"}
         </button>
@@ -2949,11 +3010,18 @@ function CharacterPanel({ char, index, canRemove, onRemove, onChange, settings }
   const s = (k,v) => onChange(c=>({...c,[k]:v}));
   const hdrColor = char.gender==="male" ? "#a8c8e8" : "#f0b8c8";
 
+  const charText   = formatCharDocx(char, index);
+  const charTokens = countTokens(charText);
+  const tokenClass = charTokens > 1200 ? "over" : charTokens > 800 ? "warn" : "";
+
   return (
     <div className="cpanel">
       <div className="cheader" onClick={()=>setOpen(o=>!o)}
         style={{borderBottom:`2.5px solid ${hdrColor}`}}>
         <span className="clabel">Character {index+1}{char.name?`: ${char.name}`:""}</span>
+        <span className={`token-badge${tokenClass?" "+tokenClass:""}`} title="Approximate tokens this character uses in the system prompt">
+          ~{fmtTokens(charTokens)} tok
+        </span>
         <div className="gblocK" onClick={e=>e.stopPropagation()}>
           <span className={`glbl${char.gender==="female"?" on":""}`}>♀</span>
           <label className="gtog">
