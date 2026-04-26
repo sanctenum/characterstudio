@@ -3819,8 +3819,13 @@ Return ONLY valid JSON (no markdown fences) with this exact structure:
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const d   = await res.json();
-      let raw   = (d.choices?.[0]?.message?.content || "").trim().replace(/```json|```/g,"").trim();
-      const inf = JSON.parse(raw);
+      let raw   = (d.choices?.[0]?.message?.content || "").trim();
+      // Strip markdown code fences (case-insensitive) and any surrounding prose
+      raw = raw.replace(/```(?:json)?/gi, "").trim();
+      // Extract just the JSON object in case the model added preamble/postamble text
+      const jsonMatch = raw.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error("Model did not return a valid JSON object. Try again or switch to a different model.");
+      const inf = JSON.parse(jsonMatch[0]);
       setInference(inf);
       setStep("inferred");
     } catch(e) {
