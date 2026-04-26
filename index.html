@@ -3693,51 +3693,56 @@ function RulesSection({ rules, onChange }) {
    BIOMAKER
 ═══════════════════════════════ */
 function Biomaker({ bots, onBack, settings, dark, onToggle }) {
-  /* flatten all characters across all bots into a pick-list */
-  const charList = [];
-  bots.forEach(bot => {
-    bot.characters.forEach((c, ci) => {
-      charList.push({ botId: bot.id, charIdx: ci, bot, char: c,
-        label: `${c.name || `Character ${ci+1}`} — ${bot.title || "Untitled"}` });
-    });
-  });
-
-  const [selKey,   setSelKey]   = useState(charList.length ? `${charList[0].botId}_${charList[0].charIdx}` : "");
-  const [refs,     setRefs]     = useState([]); // [{name, type:"text"|"image", content:string, b64?:string}]
-  const [step,     setStep]     = useState("setup"); // setup | analyzing | inferred | generating | done
-  const [inference,setInference]= useState(null); // parsed object from AI
-  const [output,   setOutput]   = useState("");
-  const [copyOk,   setCopyOk]   = useState(false);
-  const [error,    setError]    = useState("");
+  const [selBotId, setSelBotId]  = useState(bots.length ? bots[0].id : "");
+  const [refs,     setRefs]      = useState([]);
+  const [step,     setStep]      = useState("setup");
+  const [inference,setInference] = useState(null);
+  const [output,   setOutput]    = useState("");
+  const [copyOk,   setCopyOk]    = useState(false);
+  const [error,    setError]     = useState("");
 
   const MAX_REFS = 5;
+  const selectedBot = bots.find(b => b.id === selBotId) || null;
 
-  const selectedEntry = charList.find(e => `${e.botId}_${e.charIdx}` === selKey) || null;
-  const selectedChar  = selectedEntry?.char || null;
-  const selectedBot   = selectedEntry?.bot  || null;
-
-  /* ── Build a compact character summary for the prompt ── */
-  function charSummary(c, bot) {
+  /* ── Build a full scenario dump for the prompt (no rules) ── */
+  function scenarioDump(bot) {
+    if (!bot) return "";
     const lines = [];
-    lines.push(`Name: ${c.name || "Unknown"}`);
-    if (c.age)    lines.push(`Age: ${c.age}`);
-    if (c.gender) lines.push(`Gender: ${c.gender}`);
-    if (c.height) lines.push(`Height: ${c.height}`);
-    if (c.physicalAppearances?.trim()) lines.push(`Appearance: ${c.physicalAppearances.trim()}`);
-    if (c.personality?.length) lines.push(`Personality: ${c.personality.join(", ")}`);
-    if (c.motivation?.trim()) lines.push(`Motivation: ${c.motivation.trim()}`);
-    const bs = (c.backstory||[]).map(e=>e.text?.trim()).filter(Boolean);
-    if (bs.length) lines.push(`Backstory:\n${bs.map(b=>`• ${b}`).join("\n")}`);
-    if (c.intimacyDetails?.trim()) lines.push(`Intimacy: ${c.intimacyDetails.trim()}`);
-    const sp = c.speechPatterns;
-    if (sp) {
-      const slines = sp.mode==="custom"
-        ? (sp.customLines||[]).filter(l=>l.trim())
-        : (sp.selectedLines||[]);
-      if (slines.length) lines.push(`Speech examples:\n${slines.map(l=>`• "${l}"`).join("\n")}`);
-    }
-    if (bot?.scenario?.setting?.trim()) lines.push(`Setting: ${bot.scenario.setting.trim()}`);
-    if (bot?.scenario?.premise?.trim()) lines.push(`Premise: ${bot.scenario.premise.slice(0,400)}`);
+    lines.push(`=== SCENARIO: ${bot.title || "Untitled"} ===\n`);
+
+    bot.characters.forEach((c, i) => {
+      lines.push(`--- Character ${i+1}: ${c.name || "Unnamed"} ---`);
+      if (c.age)    lines.push(`Age: ${c.age}`);
+      if (c.gender) lines.push(`Gender: ${c.gender}`);
+      if (c.height) lines.push(`Height: ${c.height}`);
+      if (c.physicalAppearances?.trim()) lines.push(`Appearance: ${c.physicalAppearances.trim()}`);
+      if (c.personality?.length) lines.push(`Personality: ${c.personality.join(", ")}`);
+      if (c.motivation?.trim()) lines.push(`Motivation: ${c.motivation.trim()}`);
+      const bs = (c.backstory||[]).map(e=>e.text?.trim()).filter(Boolean);
+      if (bs.length) lines.push(`Backstory:\n${bs.map(b=>`• ${b}`).join("\n")}`);
+      if (c.intimacyDetails?.trim()) lines.push(`Intimacy Details: ${c.intimacyDetails.trim()}`);
+      const sp = c.speechPatterns;
+      if (sp) {
+        const slines = sp.mode==="custom"
+          ? (sp.customLines||[]).filter(l=>l.trim())
+          : (sp.selectedLines||[]);
+        if (slines.length) lines.push(`Speech Patterns:\n${slines.map(l=>`• "${l}"`).join("\n")}`);
+      }
+      lines.push("");
+    });
+
+    const sc = bot.scenario || {};
+    lines.push("--- Scenario ---");
+    if (sc.setting?.trim())      lines.push(`Setting: ${sc.setting.trim()}`);
+    if (sc.timePeriod?.trim())   lines.push(`Time Period: ${sc.timePeriod.trim()}`);
+    if (sc.overallTone?.trim())  lines.push(`Tone: ${sc.overallTone.trim()}`);
+    if (sc.premise?.trim())      lines.push(`Premise:\n${sc.premise.trim()}`);
+    const dyns = (sc.dynamics||[]).filter(d=>d.description?.trim());
+    if (dyns.length) lines.push(`Character Dynamics:\n${dyns.map(d=>`• ${d.charA} ↔ ${d.charB}: ${d.description.trim()}`).join("\n")}`);
+    if (sc.importantSupportingCharacters?.trim()) lines.push(`Supporting Cast: ${sc.importantSupportingCharacters.trim()}`);
+    const fms = (sc.firstMessages||[]).filter(m=>m?.trim());
+    if (fms.length) lines.push(`Intro Message(s):\n${fms.map((m,i)=>`[Variant ${i+1}] ${m.trim()}`).join("\n\n")}`);
+
     return lines.join("\n");
   }
 
@@ -3751,7 +3756,7 @@ function Biomaker({ bots, onBack, settings, dark, onToggle }) {
       if (isImage) {
         reader.onload = ev => resolve({ name: f.name, type:"image", b64: ev.target.result.split(",")[1], mediaType: f.type });
       } else {
-        reader.onload = ev => resolve({ name: f.name, type:"text",  content: ev.target.result });
+        reader.onload = ev => resolve({ name: f.name, type:"text", content: ev.target.result });
       }
       isImage ? reader.readAsDataURL(f) : reader.readAsText(f);
     })));
@@ -3761,12 +3766,12 @@ function Biomaker({ bots, onBack, settings, dark, onToggle }) {
 
   const removeRef = i => setRefs(r => r.filter((_,j)=>j!==i));
 
-  /* ── Build the multimodal messages array for the Chutes API ── */
-  function buildRefContent(refs) {
+  /* ── Build multimodal content array for the API ── */
+  function buildRefContent(refList) {
     const parts = [];
-    refs.forEach((ref, i) => {
+    refList.forEach((ref, i) => {
       if (ref.type === "image") {
-        parts.push({ type: "text", text: `[Reference ${i+1}: image file "${ref.name}"]` });
+        parts.push({ type: "text", text: `[Reference ${i+1}: image "${ref.name}"]` });
         parts.push({ type: "image_url", image_url: { url: `data:${ref.mediaType};base64,${ref.b64}` } });
       } else {
         parts.push({ type: "text", text: `[Reference ${i+1}: "${ref.name}"]\n${ref.content}` });
@@ -3782,45 +3787,39 @@ function Biomaker({ bots, onBack, settings, dark, onToggle }) {
     if (!settings?.selectedModel) { setError("No model selected. Open ⚙ Settings and pick a model."); return; }
     setError(""); setStep("analyzing");
 
-    const hasImages = refs.some(r => r.type === "image");
     const refContent = buildRefContent(refs);
-
-    const SYS = `You are a JanitorAI bot bio analyst. Study the provided reference bios and extract detailed patterns.
+    const SYS = `You are a JanitorAI bot bio analyst. Study the provided reference bios and extract detailed style patterns.
 Return ONLY valid JSON (no markdown fences) with this exact structure:
 {
-  "pov": "string — e.g. '2nd person (You are...)', '3rd person narrator', 'mixed'",
-  "tone": "string — e.g. 'dark and melancholic', 'playful and teasing', 'formal and precise'",
-  "structure": "string — describe the layout sections in order, e.g. 'Opening hook sentence → Appearance block → Personality → Backstory → Relationship hint'",
-  "length": "string — e.g. 'short (100-200 words)', 'medium (300-500 words)', 'long (600+ words)'",
-  "formatting": "string — describe use of line breaks, brackets, separators, bold/italic markers, headers, etc.",
-  "vocabulary": "string — describe word choice style, e.g. 'literary and poetic', 'direct and punchy', 'technical jargon-heavy'",
-  "openingStyle": "string — describe how bios typically open (e.g. 'starts with character name + epithet', 'opens in scene', 'begins with a quote')",
-  "uniqueFeatures": "string — any distinctive quirks: emoji use, special characters, recurring phrases, unusual formatting, etc.",
-  "summary": "string — 2-3 sentence overall characterization of what makes these bios distinctive"
+  "pov": "e.g. '2nd person (You are...)', '3rd person narrator', 'mixed'",
+  "tone": "e.g. 'dark and melancholic', 'playful and teasing', 'formal and precise'",
+  "structure": "describe the layout sections in order, e.g. 'Opening hook → Appearance block → Personality → Backstory → Closing line'",
+  "length": "e.g. 'short (100-200 words)', 'medium (300-500 words)', 'long (600+ words)'",
+  "formatting": "describe use of line breaks, brackets, separators, bold/italic markers, headers, dividers, etc.",
+  "vocabulary": "describe word choice style, e.g. 'literary and poetic', 'direct and punchy', 'technical jargon-heavy'",
+  "openingStyle": "describe how bios typically open, e.g. 'starts with character name + epithet', 'opens in scene', 'begins with a quote'",
+  "uniqueFeatures": "any distinctive quirks: emoji use, special characters, recurring phrases, unusual formatting, etc.",
+  "summary": "2-3 sentence overall characterization of what makes these bios distinctive"
 }`;
 
-    const userParts = [
-      { type: "text", text: `Analyze these ${refs.length} reference JanitorAI bio(s) and return the JSON inference:` },
-      ...refContent
-    ];
-
     try {
-      const body = {
-        model: settings.selectedModel, max_tokens: 1200, stream: false,
-        messages: [
-          { role: "system", content: SYS },
-          { role: "user",   content: userParts }
-        ]
-      };
       const res = await fetch(`${CHUTES_BASE}/chat/completions`, {
         method: "POST",
         headers: { "Content-Type":"application/json", "Authorization":`Bearer ${settings.apiKey}` },
-        body: JSON.stringify(body)
+        body: JSON.stringify({
+          model: settings.selectedModel, max_tokens: 1200, stream: false,
+          messages: [
+            { role: "system", content: SYS },
+            { role: "user",   content: [
+              { type:"text", text:`Analyze these ${refs.length} reference JanitorAI bio(s) and return the JSON inference:` },
+              ...refContent
+            ]}
+          ]
+        })
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const d   = await res.json();
-      let raw   = (d.choices?.[0]?.message?.content || "").trim();
-      raw       = raw.replace(/```json|```/g,"").trim();
+      let raw   = (d.choices?.[0]?.message?.content || "").trim().replace(/```json|```/g,"").trim();
       const inf = JSON.parse(raw);
       setInference(inf);
       setStep("inferred");
@@ -3832,22 +3831,21 @@ Return ONLY valid JSON (no markdown fences) with this exact structure:
 
   /* ── Generate bio ── */
   const generate = async () => {
-    if (!selectedChar) { setError("Select a character first."); return; }
-    if (!inference)    { setError("Analyze references first."); return; }
+    if (!selectedBot) { setError("Select a scenario card first."); return; }
+    if (!inference)   { setError("Analyze references first."); return; }
     if (!settings?.apiKey || !settings?.selectedModel) { setError("API key / model not set."); return; }
     setError(""); setStep("generating"); setOutput("");
 
-    const summary = charSummary(selectedChar, selectedBot);
+    const dump       = scenarioDump(selectedBot);
     const refContent = buildRefContent(refs);
 
-    const SYS = `You are an expert JanitorAI bot bio writer. Write the bio for the provided character, strictly following the inferred style patterns. Do not explain yourself. Output the bio text only — no headers, no meta-commentary, no markdown fences.`;
+    const SYS = `You are an expert JanitorAI bot bio writer. Write the bio for the provided scenario, strictly matching every inferred style pattern from the references. Output the bio text only — no explanations, no headers, no markdown fences.`;
 
-    const userParts = [
-      { type:"text", text:
-`Here are the reference bios you studied:` },
+    const userContent = [
+      { type:"text", text:"Here are the reference bios you studied:" },
       ...refContent,
       { type:"text", text:
-`These are the style patterns inferred from those references:
+`Style patterns inferred from those references:
 POV: ${inference.pov}
 Tone: ${inference.tone}
 Structure: ${inference.structure}
@@ -3857,10 +3855,10 @@ Vocabulary: ${inference.vocabulary}
 Opening style: ${inference.openingStyle}
 Unique features: ${inference.uniqueFeatures}
 
-Now write the JanitorAI bot bio for this character. Match the style, structure, length, tone, and formatting of the references exactly.
+Now write the JanitorAI bot bio for the scenario below. Match the style, structure, length, tone, and formatting of the references exactly. Incorporate all characters, the scenario setting, premise, and dynamics naturally into the bio.
 
-CHARACTER DATA:
-${summary}
+SCENARIO DATA:
+${dump}
 
 Write the bio now. Output ONLY the bio text.`
       }
@@ -3874,10 +3872,7 @@ Write the bio now. Output ONLY the bio text.`
           model: settings.selectedModel,
           max_tokens: Math.max(settings.proxyMaxTokens || 1500, 2000),
           stream: true,
-          messages: [
-            { role:"system", content: SYS },
-            { role:"user",   content: userParts }
-          ]
+          messages: [{ role:"system", content: SYS }, { role:"user", content: userContent }]
         })
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -3951,33 +3946,39 @@ Write the bio now. Output ONLY the bio text.`
       </div>
 
       <div className="bm-layout">
-        {/* ── LEFT: Character picker ── */}
+        {/* ── LEFT: Scenario picker ── */}
         <div className="bm-card">
-          <div className="bm-card-title">Character</div>
-          <span className="bm-card-sub">Step 1a — pick who the bio is for</span>
+          <div className="bm-card-title">Scenario Card</div>
+          <span className="bm-card-sub">Step 1a — pick which scenario to write a bio for</span>
 
-          {charList.length === 0 ? (
+          {bots.length === 0 ? (
             <div className="bm-char-preview" style={{marginTop:0}}>
-              <span className="bm-char-empty">No characters yet — create one from the dashboard first.</span>
+              <span className="bm-char-empty">No scenario cards yet — create one from the dashboard first.</span>
             </div>
           ) : (
             <>
-              <span className="bm-section-label">Select character</span>
-              <select className="bm-char-sel" value={selKey} onChange={e=>setSelKey(e.target.value)}>
-                {charList.map(e=>(
-                  <option key={`${e.botId}_${e.charIdx}`} value={`${e.botId}_${e.charIdx}`}>{e.label}</option>
+              <span className="bm-section-label">Select scenario</span>
+              <select className="bm-char-sel" value={selBotId} onChange={e=>{setSelBotId(e.target.value); setOutput(""); setStep(s=>s==="done"?"inferred":s);}}>
+                {bots.map(b=>(
+                  <option key={b.id} value={b.id}>{b.title || "Untitled Scenario"}</option>
                 ))}
               </select>
-              {selectedChar && (
+              {selectedBot && (
                 <>
-                  <span className="bm-section-label">Character snapshot</span>
+                  <span className="bm-section-label">Scenario snapshot</span>
                   <div className="bm-char-preview">
-                    {selectedChar.name && <><b>{selectedChar.name}</b><br/></>}
-                    {selectedChar.age && <>{selectedChar.age}y · </>}
-                    {selectedChar.gender && <>{selectedChar.gender}</>}
-                    {selectedChar.height && <> · {selectedChar.height}</>}
-                    {selectedChar.personality?.length > 0 && <><br/><em>{selectedChar.personality.slice(0,5).join(", ")}</em></>}
-                    {selectedChar.motivation?.trim() && <><br/>↳ {selectedChar.motivation.slice(0,100)}{selectedChar.motivation.length>100?"…":""}</>}
+                    <b>{selectedBot.title || "Untitled"}</b><br/>
+                    {selectedBot.characters.map((c,i)=>(
+                      <span key={c.id}>
+                        {i>0 && " · "}
+                        <span style={{color:"var(--red)"}}>{c.name||`Char ${i+1}`}</span>
+                        {c.age ? ` ${c.age}y` : ""}
+                        {c.gender ? ` ${c.gender}` : ""}
+                      </span>
+                    ))}
+                    {selectedBot.scenario?.setting?.trim() && <><br/><em>{selectedBot.scenario.setting.slice(0,80)}{selectedBot.scenario.setting.length>80?"…":""}</em></>}
+                    {selectedBot.scenario?.overallTone?.trim() && <><br/>Tone: {selectedBot.scenario.overallTone.slice(0,60)}</>}
+                    {selectedBot.scenario?.premise?.trim() && <><br/>↳ {selectedBot.scenario.premise.slice(0,120)}{selectedBot.scenario.premise.length>120?"…":""}</>}
                   </div>
                 </>
               )}
@@ -4033,7 +4034,7 @@ Write the bio now. Output ONLY the bio text.`
                 <div className="bm-inference-inner">
                   {INF_FIELDS.map(f => inference[f.key] && (
                     <div className="bm-inf-block" key={f.key}
-                      style={f.key==="summary"||f.key==="structure"?{gridColumn:"1/-1"}:{}}>
+                      style={(f.key==="summary"||f.key==="structure")?{gridColumn:"1/-1"}:{}}>
                       <span className="bm-inf-label">{f.label}</span>
                       <div className="bm-inf-value">{inference[f.key]}</div>
                     </div>
@@ -4042,7 +4043,7 @@ Write the bio now. Output ONLY the bio text.`
 
                 <div className="bm-gen-row">
                   <button className="bm-gen-btn" onClick={generate}
-                    disabled={!selectedChar || isGenerating}>
+                    disabled={!selectedBot || isGenerating}>
                     {isGenerating ? "Writing bio…" : "✦ Generate Bio"}
                   </button>
                   {hasOutput && (
