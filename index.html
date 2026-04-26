@@ -2540,16 +2540,33 @@ function parseThink(raw) {
 }
 
 /* ── Small collapsible thought box ── */
-function ThinkBox({ text }) {
-  const [open, setOpen] = useState(false);
-  if (!text) return null;
+function ThinkBox({ text, autoOpen }) {
+  const [open, setOpen] = useState(!!autoOpen);
+  const bodyRef = React.useRef(null);
+  // auto-open when generation starts
+  const prevAuto = React.useRef(autoOpen);
+  React.useEffect(() => {
+    if (autoOpen && !prevAuto.current) setOpen(true);
+    prevAuto.current = autoOpen;
+  }, [autoOpen]);
+  // auto-scroll to bottom as think tokens stream in
+  React.useEffect(() => {
+    if (open && autoOpen && bodyRef.current) {
+      bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
+    }
+  }, [text, open, autoOpen]);
+  if (!text && !autoOpen) return null;
   return (
     <div className="think-box">
       <div className="think-header" onClick={()=>setOpen(o=>!o)}>
-        <span className="think-label">🧠 Thought process</span>
+        <span className="think-label">🧠 Thought process{autoOpen ? " (live…)" : ""}</span>
         <span className="think-chevron">{open?"▲":"▼"}</span>
       </div>
-      {open && <div className="think-body">{text}</div>}
+      {open && (
+        <div className="think-body" ref={bodyRef}>
+          {text || <span style={{fontStyle:"italic",opacity:0.6}}>Waiting for model to start thinking…</span>}
+        </div>
+      )}
     </div>
   );
 }
@@ -3958,7 +3975,7 @@ Write the bio now. Output ONLY the bio text. No em-dashes. No melodrama. No AI-s
   const isAnalyzing  = step === "analyzing";
   const isGenerating = step === "generating";
   const hasInference = step === "inferred" || step === "generating" || step === "done";
-  const hasOutput    = step === "done" || (step === "generating" && output);
+  const hasOutput    = step === "done" || step === "generating";
 
   return (
     <div className="biomaker">
@@ -4092,22 +4109,27 @@ Write the bio now. Output ONLY the bio text. No em-dashes. No melodrama. No AI-s
                   </button>
                 </div>
 
-                {(hasOutput || isGenerating) && (
+                {hasOutput && (
                   <div className="bm-output-wrap">
                     <span className="bm-section-label">Generated Bio</span>
-                    {thinkContent && (
-                      <div style={{marginBottom:"10px"}}>
-                        <ThinkBox text={thinkContent} />
-                      </div>
-                    )}
-                    {isGenerating && !output && !thinkContent && (
-                      <div className="bm-inf-loading">Writing bio…</div>
-                    )}
-                    {(output || (isGenerating && thinkContent)) && (
-                      <div className="bm-output">
-                        {output || <span className="bm-output-empty">Thinking…</span>}
-                      </div>
-                    )}
+
+                    {/* Always show ThinkBox during generation — auto-open so user knows it's working */}
+                    <div style={{marginBottom:"10px"}}>
+                      <ThinkBox text={thinkContent} autoOpen={isGenerating} />
+                    </div>
+
+                    {/* Bio output — shows placeholder while model is still in thinking phase */}
+                    <div className="bm-output">
+                      {output
+                        ? output
+                        : isGenerating
+                          ? <span className="bm-output-empty" style={{fontStyle:"italic",opacity:0.55}}>
+                              {thinkContent ? "Finishing thoughts…" : "Connecting to model…"}
+                            </span>
+                          : null
+                      }
+                    </div>
+
                     {output && <div className="bm-token-count">~{countTokens(output)} tokens · {output.length} chars</div>}
                   </div>
                 )}
