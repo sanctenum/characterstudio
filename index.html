@@ -991,7 +991,7 @@
     .sp-hint { font-family:'Courier Prime',monospace; font-size:0.6rem; color:var(--ink-faint); font-style:italic; padding:4px 2px; }
 
     /* ═══ BIOMAKER ═══ */
-    .biomaker { max-width: 900px; margin: 0 auto; padding: 40px 28px 120px; }
+    .biomaker { max-width: 1200px; margin: 0 auto; padding: 40px 28px 120px; }
     .biomaker-header {
       display: flex; align-items: flex-end; justify-content: space-between;
       margin-bottom: 36px; padding-bottom: 14px;
@@ -1002,8 +1002,10 @@
     .biomaker-back { font-family: 'Courier Prime', monospace; font-size: 0.76rem; background: none; border: none; cursor: pointer; color: var(--ink-mid); text-transform: uppercase; letter-spacing: 1px; }
     .biomaker-back:hover { color: var(--red); }
 
-    .bm-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
-    @media (max-width: 680px) { .bm-layout { grid-template-columns: 1fr; } }
+    /* Main 3-col layout: left controls | right canvas — inference spans full width below */
+    .bm-layout { display: grid; grid-template-columns: 340px 1fr; gap: 28px; align-items: start; }
+    @media (max-width: 820px) { .bm-layout { grid-template-columns: 1fr; } }
+    .bm-left-col { display: flex; flex-direction: column; gap: 20px; }
 
     .bm-card {
       background: var(--paper); border: 1px solid var(--paper-dark);
@@ -1119,12 +1121,13 @@
     .bm-copy-btn:hover { border-color: var(--ink); color: var(--ink); }
     .bm-copy-btn.ok { background: #2c6e3a; color: var(--paper); border-color: #2c6e3a; }
 
-    .bm-output-wrap { margin-top: 20px; }
+    .bm-output-wrap { margin-top: 0; }
     .bm-output {
       font-family: 'Lora', serif; font-size: 0.88rem; color: var(--ink);
       background: var(--sc-bg); border: 1px solid var(--paper-line);
-      padding: 18px 18px; line-height: 1.8; white-space: pre-wrap;
-      min-height: 120px; max-height: 520px; overflow-y: auto;
+      padding: 18px; line-height: 1.8; white-space: pre-wrap;
+      min-height: 340px; height: calc(100vh - 460px); min-height: 340px; max-height: 800px;
+      overflow-y: auto; resize: vertical;
     }
     .bm-output-empty {
       font-family: 'Courier Prime', monospace; font-size: 0.7rem; color: var(--ink-faint);
@@ -1135,6 +1138,40 @@
       font-family: 'Courier Prime', monospace; font-size: 0.6rem; color: var(--ink-faint);
       text-transform: uppercase; letter-spacing: 1px; margin-top: 6px; text-align: right;
     }
+
+    /* canvas card (right column) */
+    .bm-canvas-card {
+      background: var(--paper); border: 1px solid var(--paper-dark);
+      box-shadow: 4px 5px 0 var(--shadow); padding: 22px 20px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .bm-canvas-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .bm-save-btn {
+      font-family: 'Courier Prime', monospace; font-size: 0.74rem; text-transform: uppercase;
+      letter-spacing: 1px; background: var(--ink); color: var(--paper);
+      border: none; padding: 9px 16px; cursor: pointer; white-space: nowrap;
+    }
+    .bm-save-btn:hover:not(:disabled) { background: var(--red); }
+    .bm-save-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .bm-save-btn.ok { background: #2c6e3a; }
+
+    /* saved bios list */
+    .bm-saved-wrap { margin-top: 8px; }
+    .bm-saved-list { display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto; }
+    .bm-saved-item {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--sc-bg); border: 1px solid var(--paper-line);
+      padding: 8px 10px; cursor: pointer;
+    }
+    .bm-saved-item:hover { border-color: var(--ink-mid); }
+    .bm-saved-item.active { border-color: var(--red); }
+    .bm-saved-label {
+      font-family: 'Courier Prime', monospace; font-size: 0.68rem; color: var(--ink-mid);
+      flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.5;
+    }
+    .bm-saved-label strong { color: var(--ink); display: block; font-size: 0.72rem; }
+    .bm-saved-rm { background: none; border: none; cursor: pointer; color: var(--ink-faint); font-size: 0.72rem; padding: 2px 5px; flex-shrink: 0; }
+    .bm-saved-rm:hover { color: var(--red); }
 
     /* error */
     .bm-error {
@@ -3710,24 +3747,39 @@ function RulesSection({ rules, onChange }) {
    BIOMAKER
 ═══════════════════════════════ */
 function Biomaker({ bots, onBack, settings, dark, onToggle }) {
-  const [selBotId, setSelBotId]  = useState(bots.length ? bots[0].id : "");
-  const [refs,     setRefs]      = useState([]);
-  const [step,     setStep]      = useState("setup");
-  const [inference,setInference] = useState(null);
-  const [output,       setOutput]       = useState("");
-  const [thinkContent, setThinkContent] = useState("");
-  const [copyOk,       setCopyOk]       = useState(false);
-  const [error,        setError]        = useState("");
+  const [selBotId,     setSelBotId]     = React.useState(bots.length ? bots[0].id : "");
+  const [refs,         setRefs]         = React.useState([]);
+  const [inference,    setInference]    = React.useState(null);
+  const [output,       setOutput]       = React.useState("");
+  const [thinkContent, setThinkContent] = React.useState("");
+  const [copyOk,       setCopyOk]       = React.useState(false);
+  const [error,        setError]        = React.useState("");
+  const [savedBios,    setSavedBios]    = React.useState([]); // [{id,label,text,ts}]
+  const [savedOk,      setSavedOk]      = React.useState(false);
+  const [viewingSaved, setViewingSaved] = React.useState(null); // id of saved bio being viewed
+
+  // step: "setup" | "analyzing" | "inferred" | "generating" | "done"
+  const [step, setStep] = React.useState("setup");
+
+  // Use a ref for the live "is generation currently running" flag so it is
+  // NEVER affected by React batching — this is the source of the ThinkBox bug.
+  const generatingRef = React.useRef(false);
+  const [genTick, setGenTick] = React.useState(0); // force re-render when ref changes
 
   const MAX_REFS = 5;
   const selectedBot = bots.find(b => b.id === selBotId) || null;
 
-  /* ── Build a full scenario dump for the prompt (no rules) ── */
+  const isAnalyzing  = step === "analyzing";
+  // isGenerating reads the REF — not step — so it's always accurate mid-stream
+  const isGenerating = generatingRef.current;
+  const hasInference = ["inferred","done"].includes(step) || isGenerating;
+  const hasOutput    = output.length > 0 || isGenerating;
+
+  /* ── Scenario dump ── */
   function scenarioDump(bot) {
     if (!bot) return "";
     const lines = [];
     lines.push(`=== SCENARIO: ${bot.title || "Untitled"} ===\n`);
-
     bot.characters.forEach((c, i) => {
       lines.push(`--- Character ${i+1}: ${c.name || "Unnamed"} ---`);
       if (c.age)    lines.push(`Age: ${c.age}`);
@@ -3748,7 +3800,6 @@ function Biomaker({ bots, onBack, settings, dark, onToggle }) {
       }
       lines.push("");
     });
-
     const sc = bot.scenario || {};
     lines.push("--- Scenario ---");
     if (sc.setting?.trim())      lines.push(`Setting: ${sc.setting.trim()}`);
@@ -3760,11 +3811,10 @@ function Biomaker({ bots, onBack, settings, dark, onToggle }) {
     if (sc.importantSupportingCharacters?.trim()) lines.push(`Supporting Cast: ${sc.importantSupportingCharacters.trim()}`);
     const fms = (sc.firstMessages||[]).filter(m=>m?.trim());
     if (fms.length) lines.push(`Intro Message(s):\n${fms.map((m,i)=>`[Variant ${i+1}] ${m.trim()}`).join("\n\n")}`);
-
     return lines.join("\n");
   }
 
-  /* ── File upload handler ── */
+  /* ── File upload ── */
   const handleFileUpload = async (files) => {
     if (!files || refs.length >= MAX_REFS) return;
     const toAdd = Array.from(files).slice(0, MAX_REFS - refs.length);
@@ -3784,15 +3834,15 @@ function Biomaker({ bots, onBack, settings, dark, onToggle }) {
 
   const removeRef = i => setRefs(r => r.filter((_,j)=>j!==i));
 
-  /* ── Build multimodal content array for the API ── */
+  /* ── Build multimodal content array ── */
   function buildRefContent(refList) {
     const parts = [];
     refList.forEach((ref, i) => {
       if (ref.type === "image") {
-        parts.push({ type: "text", text: `[Reference ${i+1}: image "${ref.name}"]` });
-        parts.push({ type: "image_url", image_url: { url: `data:${ref.mediaType};base64,${ref.b64}` } });
+        parts.push({ type:"text", text:`[Reference ${i+1}: image "${ref.name}"]` });
+        parts.push({ type:"image_url", image_url:{ url:`data:${ref.mediaType};base64,${ref.b64}` } });
       } else {
-        parts.push({ type: "text", text: `[Reference ${i+1}: "${ref.name}"]\n${ref.content}` });
+        parts.push({ type:"text", text:`[Reference ${i+1}: "${ref.name}"]\n${ref.content}` });
       }
     });
     return parts;
@@ -3801,21 +3851,21 @@ function Biomaker({ bots, onBack, settings, dark, onToggle }) {
   /* ── Analyze references ── */
   const analyze = async () => {
     if (!refs.length) { setError("Upload at least one reference bio first."); return; }
-    if (!settings?.apiKey) { setError("No API key set. Open ⚙ Settings and enter your Chutes API key."); return; }
-    if (!settings?.selectedModel) { setError("No model selected. Open ⚙ Settings and pick a model."); return; }
+    if (!settings?.apiKey) { setError("No API key set. Open ⚙ Settings."); return; }
+    if (!settings?.selectedModel) { setError("No model selected. Open ⚙ Settings."); return; }
     setError(""); setStep("analyzing");
 
     const refContent = buildRefContent(refs);
     const SYS = `You are a JanitorAI bot bio analyst. Study the provided reference bios and extract detailed style patterns.
-Return ONLY valid JSON (no markdown fences) with this exact structure:
+Return ONLY valid JSON (no markdown fences, no preamble) with this exact structure:
 {
   "pov": "e.g. '2nd person (You are...)', '3rd person narrator', 'mixed'",
   "tone": "e.g. 'dark and melancholic', 'playful and teasing', 'formal and precise'",
-  "structure": "describe the layout sections in order, e.g. 'Opening hook → Appearance block → Personality → Backstory → Closing line'",
+  "structure": "describe the layout sections in order",
   "length": "e.g. 'short (100-200 words)', 'medium (300-500 words)', 'long (600+ words)'",
   "formatting": "describe use of line breaks, brackets, separators, bold/italic markers, headers, dividers, etc.",
-  "vocabulary": "describe word choice style, e.g. 'literary and poetic', 'direct and punchy', 'technical jargon-heavy'",
-  "openingStyle": "describe how bios typically open, e.g. 'starts with character name + epithet', 'opens in scene', 'begins with a quote'",
+  "vocabulary": "describe word choice style",
+  "openingStyle": "describe how bios typically open",
   "uniqueFeatures": "any distinctive quirks: emoji use, special characters, recurring phrases, unusual formatting, etc.",
   "summary": "2-3 sentence overall characterization of what makes these bios distinctive"
 }`;
@@ -3827,8 +3877,8 @@ Return ONLY valid JSON (no markdown fences) with this exact structure:
         body: JSON.stringify({
           model: settings.selectedModel, max_tokens: 1200, stream: false,
           messages: [
-            { role: "system", content: SYS },
-            { role: "user",   content: [
+            { role:"system", content: SYS },
+            { role:"user",   content: [
               { type:"text", text:`Analyze these ${refs.length} reference JanitorAI bio(s) and return the JSON inference:` },
               ...refContent
             ]}
@@ -3838,11 +3888,9 @@ Return ONLY valid JSON (no markdown fences) with this exact structure:
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const d   = await res.json();
       let raw   = (d.choices?.[0]?.message?.content || "").trim();
-      // Strip markdown code fences (case-insensitive) and any surrounding prose
       raw = raw.replace(/```(?:json)?/gi, "").trim();
-      // Extract just the JSON object in case the model added preamble/postamble text
       const jsonMatch = raw.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) throw new Error("Model did not return a valid JSON object. Try again or switch to a different model.");
+      if (!jsonMatch) throw new Error("Model did not return a valid JSON object. Try again or switch models.");
       const inf = JSON.parse(jsonMatch[0]);
       setInference(inf);
       setStep("inferred");
@@ -3857,17 +3905,25 @@ Return ONLY valid JSON (no markdown fences) with this exact structure:
     if (!selectedBot) { setError("Select a scenario card first."); return; }
     if (!inference)   { setError("Analyze references first."); return; }
     if (!settings?.apiKey || !settings?.selectedModel) { setError("API key / model not set."); return; }
-    setError(""); setStep("generating"); setOutput(""); setThinkContent("");
+    if (generatingRef.current) return; // prevent double-tap
+
+    setError("");
+    setOutput("");
+    setThinkContent("");
+    setViewingSaved(null);
+    // Mark generating BEFORE any await so the UI updates immediately
+    generatingRef.current = true;
+    setGenTick(t => t + 1);
 
     const dump       = scenarioDump(selectedBot);
     const refContent = buildRefContent(refs);
 
-    const SYS = `You are an expert JanitorAI bot bio writer. Your job is to write a character bio that feels like it was written by a thoughtful, experienced human writer.
+    const SYS = `You are an expert JanitorAI bot bio writer. Your job is to write a character bio that reads like it was written by a thoughtful, experienced human writer — not an AI.
 
 STRICT RULES — never break these:
-- NEVER use em-dashes (— or –). Replace them with commas, periods, or rewrite the sentence.
-- Do NOT use purple prose or over-the-top dramatic language. If the reference material is very dramatic, dial it back to something interesting but grounded — the kind of thing a skilled human author would write.
-- Write naturally and flowingly. Introduce characters and their world chronologically and systematically, like you are introducing someone fascinating to a new reader. Keep it readable and human, not robotic or list-like.
+- NEVER use em-dashes (— or –). Replace them with commas, periods, or rewrite the sentence entirely.
+- Do NOT use purple prose or over-the-top dramatic language. If the reference material is very dramatic, dial it back to something interesting but grounded.
+- Write naturally and with flow. Introduce characters and their world chronologically and systematically, like you are introducing someone fascinating to a new reader. Keep it readable and human, not robotic or list-like.
 - Match the structural pattern, POV, length, and formatting of the references exactly, but filter out melodrama.
 - Output the bio text ONLY. No explanations, no headers, no markdown fences, no meta-commentary.`;
 
@@ -3915,7 +3971,6 @@ Write the bio now. Output ONLY the bio text. No em-dashes. No melodrama. No AI-s
       const dec      = new TextDecoder();
       let   rawAll   = "";
       let   leftover = "";
-      setStep("done");
 
       while (true) {
         const { done, value } = await reader.read();
@@ -3933,11 +3988,23 @@ Write the bio now. Output ONLY the bio text. No em-dashes. No melodrama. No AI-s
               const delta  = parsed.choices?.[0]?.delta?.content;
               if (typeof delta === "string") {
                 rawAll += delta;
-                const { thinkContent: tc, content: bio } = parseThink(rawAll);
-                setThinkContent(tc);
-                // Hide any still-open <think> block from main output
-                const visibleBio = bio.replace(/<think>[\s\S]*$/i, "").trim();
-                setOutput(visibleBio);
+                // Real-time: split think vs bio
+                // Everything inside the LAST unclosed <think> is still thinking
+                const closedThink  = rawAll.replace(/<think>([\s\S]*?)<\/think>/gi, (_, inner) => {
+                  return `\x00THINK\x00${inner.trim()}\x00/THINK\x00`;
+                });
+                const thinkParts   = [];
+                const withoutThink = closedThink.replace(/\x00THINK\x00([\s\S]*?)\x00\/THINK\x00/g, (_, t) => {
+                  thinkParts.push(t); return "";
+                });
+                // Check for an open (not yet closed) think block
+                const openThinkMatch = rawAll.match(/<think>([\s\S]*)$/i);
+                const liveThink = openThinkMatch
+                  ? rawAll.replace(/^[\s\S]*<think>/i, "")   // everything after the last <think>
+                  : "";
+                const allThink = [...thinkParts, liveThink].filter(Boolean).join("\n\n");
+                setThinkContent(allThink);
+                setOutput(withoutThink.trim());
               }
             } catch {}
           }
@@ -3947,11 +4014,38 @@ Write the bio now. Output ONLY the bio text. No em-dashes. No melodrama. No AI-s
       const { thinkContent: tc, content: bio } = parseThink(rawAll);
       setThinkContent(tc);
       setOutput(bio);
+      setStep("done");
 
     } catch(e) {
       setError(`Generation failed: ${e.message}`);
-      setStep("inferred");
+      setStep(inference ? "inferred" : "setup");
+    } finally {
+      generatingRef.current = false;
+      setGenTick(t => t + 1);
     }
+  };
+
+  /* ── Save bio ── */
+  const saveBio = () => {
+    if (!output.trim()) return;
+    const label = selectedBot
+      ? `${selectedBot.title || "Untitled"} — ${new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}`
+      : `Bio — ${new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}`;
+    const entry = { id: Date.now().toString(), label, text: output, ts: Date.now() };
+    setSavedBios(s => [entry, ...s]);
+    setSavedOk(true);
+    setTimeout(() => setSavedOk(false), 2000);
+  };
+
+  const deleteSaved = (id) => {
+    setSavedBios(s => s.filter(b => b.id !== id));
+    if (viewingSaved === id) { setViewingSaved(null); setOutput(""); }
+  };
+
+  const loadSaved = (entry) => {
+    setViewingSaved(entry.id);
+    setOutput(entry.text);
+    setThinkContent("");
   };
 
   const copyOutput = () => {
@@ -3972,11 +4066,6 @@ Write the bio now. Output ONLY the bio text. No em-dashes. No melodrama. No AI-s
     { key:"summary",       label:"Overall Read"     },
   ];
 
-  const isAnalyzing  = step === "analyzing";
-  const isGenerating = step === "generating";
-  const hasInference = step === "inferred" || step === "generating" || step === "done";
-  const hasOutput    = step === "done" || step === "generating";
-
   return (
     <div className="biomaker">
       {/* header */}
@@ -3992,157 +4081,231 @@ Write the bio now. Output ONLY the bio text. No em-dashes. No melodrama. No AI-s
       <div className="bm-steps">
         <div className={`bm-step ${step==="setup"?"active":hasInference?"done":""}`}>1. Select &amp; Upload</div>
         <div className={`bm-step ${step==="analyzing"?"active":hasInference?"done":""}`}>2. Analyze</div>
-        <div className={`bm-step ${step==="inferred"?"active":hasOutput?"done":""}`}>3. Review Style</div>
-        <div className={`bm-step ${step==="generating"?"active":step==="done"?"done":""}`}>4. Generate</div>
+        <div className={`bm-step ${step==="inferred"?"active":(isGenerating||step==="done")?"done":""}`}>3. Review Style</div>
+        <div className={`bm-step ${isGenerating?"active":step==="done"?"done":""}`}>4. Generate</div>
       </div>
 
       <div className="bm-layout">
-        {/* ── LEFT: Scenario picker ── */}
-        <div className="bm-card">
-          <div className="bm-card-title">Scenario Card</div>
-          <span className="bm-card-sub">Step 1a — pick which scenario to write a bio for</span>
+        {/* ── LEFT COLUMN ── */}
+        <div className="bm-left-col">
 
-          {bots.length === 0 ? (
-            <div className="bm-char-preview" style={{marginTop:0}}>
-              <span className="bm-char-empty">No scenario cards yet — create one from the dashboard first.</span>
-            </div>
-          ) : (
-            <>
-              <span className="bm-section-label">Select scenario</span>
-              <select className="bm-char-sel" value={selBotId} onChange={e=>{setSelBotId(e.target.value); setOutput(""); setStep(s=>s==="done"?"inferred":s);}}>
-                {bots.map(b=>(
-                  <option key={b.id} value={b.id}>{b.title || "Untitled Scenario"}</option>
-                ))}
-              </select>
-              {selectedBot && (
-                <>
-                  <span className="bm-section-label">Scenario snapshot</span>
-                  <div className="bm-char-preview">
-                    <b>{selectedBot.title || "Untitled"}</b><br/>
-                    {selectedBot.characters.map((c,i)=>(
-                      <span key={c.id}>
-                        {i>0 && " · "}
-                        <span style={{color:"var(--red)"}}>{c.name||`Char ${i+1}`}</span>
-                        {c.age ? ` ${c.age}y` : ""}
-                        {c.gender ? ` ${c.gender}` : ""}
-                      </span>
-                    ))}
-                    {selectedBot.scenario?.setting?.trim() && <><br/><em>{selectedBot.scenario.setting.slice(0,80)}{selectedBot.scenario.setting.length>80?"…":""}</em></>}
-                    {selectedBot.scenario?.overallTone?.trim() && <><br/>Tone: {selectedBot.scenario.overallTone.slice(0,60)}</>}
-                    {selectedBot.scenario?.premise?.trim() && <><br/>↳ {selectedBot.scenario.premise.slice(0,120)}{selectedBot.scenario.premise.length>120?"…":""}</>}
-                  </div>
-                </>
-              )}
-            </>
-          )}
-        </div>
+          {/* Scenario picker */}
+          <div className="bm-card">
+            <div className="bm-card-title">Scenario Card</div>
+            <span className="bm-card-sub">Step 1a — pick which scenario to write a bio for</span>
 
-        {/* ── RIGHT: Reference upload ── */}
-        <div className="bm-card">
-          <div className="bm-card-title">Reference Bios</div>
-          <span className="bm-card-sub">Step 1b — up to 5 example bios to learn from</span>
-          <span className="bm-section-label">Uploaded ({refs.length}/{MAX_REFS}) — text files or screenshots</span>
-
-          {refs.length > 0 && (
-            <div className="bm-ref-list">
-              {refs.map((r,i) => (
-                <div className="bm-ref-item" key={i}>
-                  <span className="bm-ref-icon">{r.type==="image"?"🖼":"📄"}</span>
-                  <span className="bm-ref-name">{r.name}</span>
-                  <button className="bm-ref-rm" onClick={()=>removeRef(i)}>✕</button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <label className={`bm-upload-btn${refs.length>=MAX_REFS?" maxed":""}`}>
-            {refs.length>=MAX_REFS ? `Max ${MAX_REFS} references reached` : `＋ Upload reference${refs.length?` (${MAX_REFS-refs.length} left)`:""}`}
-            <input type="file" multiple accept=".txt,.md,text/plain,text/markdown,image/*"
-              style={{display:"none"}} disabled={refs.length>=MAX_REFS}
-              onChange={e=>{ handleFileUpload(e.target.files); e.target.value=""; }}/>
-          </label>
-
-          <div style={{marginTop:"8px",fontFamily:"'Courier Prime',monospace",fontSize:"0.62rem",color:"var(--ink-faint)",lineHeight:1.7}}>
-            Upload .txt/.md files with bio text, or screenshots/images of JanitorAI bios. The AI reads both.
-          </div>
-
-          <button className="bm-analyze-btn" onClick={analyze}
-            disabled={!refs.length || isAnalyzing || isGenerating}>
-            {isAnalyzing ? "Analyzing references…" : "⊙ Analyze References"}
-          </button>
-        </div>
-
-        {/* ── INFERENCE PANEL (full-width) ── */}
-        {(hasInference || isAnalyzing) && (
-          <div className="bm-inference">
-            <div className="bm-card-title">Style Inference</div>
-            <span className="bm-card-sub">What the AI inferred from your references</span>
-
-            {isAnalyzing ? (
-              <div className="bm-inf-loading">Reading references</div>
-            ) : inference && (
+            {bots.length === 0 ? (
+              <div className="bm-char-preview" style={{marginTop:0}}>
+                <span className="bm-char-empty">No scenario cards yet — create one from the dashboard first.</span>
+              </div>
+            ) : (
               <>
-                <div className="bm-inference-inner">
-                  {INF_FIELDS.map(f => inference[f.key] && (
-                    <div className="bm-inf-block" key={f.key}
-                      style={(f.key==="summary"||f.key==="structure")?{gridColumn:"1/-1"}:{}}>
-                      <span className="bm-inf-label">{f.label}</span>
-                      <div className="bm-inf-value">{inference[f.key]}</div>
-                    </div>
+                <span className="bm-section-label">Select scenario</span>
+                <select className="bm-char-sel" value={selBotId}
+                  onChange={e=>{setSelBotId(e.target.value); setOutput(""); setStep(s=>s==="done"?"inferred":s);}}>
+                  {bots.map(b=>(
+                    <option key={b.id} value={b.id}>{b.title || "Untitled Scenario"}</option>
                   ))}
-                </div>
-
-                <div className="bm-gen-row">
-                  <button className="bm-gen-btn" onClick={generate}
-                    disabled={!selectedBot || isGenerating}>
-                    {isGenerating ? "Writing bio…" : "✦ Generate Bio"}
-                  </button>
-                  {hasOutput && (
-                    <button className={`bm-copy-btn${copyOk?" ok":""}`} onClick={copyOutput}>
-                      {copyOk ? "✓ Copied!" : "⎘ Copy Bio"}
-                    </button>
-                  )}
-                  <button className="bm-copy-btn" onClick={()=>{
-                    setStep("setup"); setInference(null); setOutput(""); setThinkContent(""); setError("");
-                  }} style={{marginLeft:"auto"}}>
-                    ↺ Reset
-                  </button>
-                </div>
-
-                {hasOutput && (
-                  <div className="bm-output-wrap">
-                    <span className="bm-section-label">Generated Bio</span>
-
-                    {/* Always show ThinkBox during generation — auto-open so user knows it's working */}
-                    <div style={{marginBottom:"10px"}}>
-                      <ThinkBox text={thinkContent} autoOpen={isGenerating} />
+                </select>
+                {selectedBot && (
+                  <>
+                    <span className="bm-section-label">Scenario snapshot</span>
+                    <div className="bm-char-preview">
+                      <b>{selectedBot.title || "Untitled"}</b><br/>
+                      {selectedBot.characters.map((c,i)=>(
+                        <span key={c.id}>
+                          {i>0 && " · "}
+                          <span style={{color:"var(--red)"}}>{c.name||`Char ${i+1}`}</span>
+                          {c.age ? ` ${c.age}y` : ""}
+                          {c.gender ? ` ${c.gender}` : ""}
+                        </span>
+                      ))}
+                      {selectedBot.scenario?.setting?.trim() && <><br/><em>{selectedBot.scenario.setting.slice(0,80)}{selectedBot.scenario.setting.length>80?"…":""}</em></>}
+                      {selectedBot.scenario?.overallTone?.trim() && <><br/>Tone: {selectedBot.scenario.overallTone.slice(0,60)}</>}
+                      {selectedBot.scenario?.premise?.trim() && <><br/>↳ {selectedBot.scenario.premise.slice(0,120)}{selectedBot.scenario.premise.length>120?"…":""}</>}
                     </div>
-
-                    {/* Bio output — shows placeholder while model is still in thinking phase */}
-                    <div className="bm-output">
-                      {output
-                        ? output
-                        : isGenerating
-                          ? <span className="bm-output-empty" style={{fontStyle:"italic",opacity:0.55}}>
-                              {thinkContent ? "Finishing thoughts…" : "Connecting to model…"}
-                            </span>
-                          : null
-                      }
-                    </div>
-
-                    {output && <div className="bm-token-count">~{countTokens(output)} tokens · {output.length} chars</div>}
-                  </div>
+                  </>
                 )}
               </>
             )}
           </div>
-        )}
+
+          {/* Reference upload */}
+          <div className="bm-card">
+            <div className="bm-card-title">Reference Bios</div>
+            <span className="bm-card-sub">Step 1b — up to 5 example bios to learn from</span>
+            <span className="bm-section-label">Uploaded ({refs.length}/{MAX_REFS}) — text files or screenshots</span>
+
+            {refs.length > 0 && (
+              <div className="bm-ref-list">
+                {refs.map((r,i) => (
+                  <div className="bm-ref-item" key={i}>
+                    <span className="bm-ref-icon">{r.type==="image"?"🖼":"📄"}</span>
+                    <span className="bm-ref-name">{r.name}</span>
+                    <button className="bm-ref-rm" onClick={()=>removeRef(i)}>✕</button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <label className={`bm-upload-btn${refs.length>=MAX_REFS?" maxed":""}`}>
+              {refs.length>=MAX_REFS ? `Max ${MAX_REFS} references reached` : `＋ Upload reference${refs.length?` (${MAX_REFS-refs.length} left)`:""}`}
+              <input type="file" multiple accept=".txt,.md,text/plain,text/markdown,image/*"
+                style={{display:"none"}} disabled={refs.length>=MAX_REFS}
+                onChange={e=>{ handleFileUpload(e.target.files); e.target.value=""; }}/>
+            </label>
+
+            <div style={{marginTop:"8px",fontFamily:"'Courier Prime',monospace",fontSize:"0.62rem",color:"var(--ink-faint)",lineHeight:1.7}}>
+              Upload .txt/.md files with bio text, or screenshots/images of JanitorAI bios. The AI reads both.
+            </div>
+
+            <button className="bm-analyze-btn" onClick={analyze}
+              disabled={!refs.length || isAnalyzing || isGenerating}>
+              {isAnalyzing ? "Analyzing references…" : "⊙ Analyze References"}
+            </button>
+          </div>
+
+          {/* Style inference (shown in left col when present) */}
+          {(hasInference || isAnalyzing) && (
+            <div className="bm-card">
+              <div className="bm-card-title">Style Inference</div>
+              <span className="bm-card-sub">What the AI inferred from your references</span>
+
+              {isAnalyzing ? (
+                <div className="bm-inf-loading">Reading references</div>
+              ) : inference && (
+                <>
+                  <div className="bm-inference-inner">
+                    {INF_FIELDS.map(f => inference[f.key] && (
+                      <div className="bm-inf-block" key={f.key}
+                        style={(f.key==="summary"||f.key==="structure")?{gridColumn:"1/-1"}:{}}>
+                        <span className="bm-inf-label">{f.label}</span>
+                        <div className="bm-inf-value">{inference[f.key]}</div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Saved bios list */}
+          {savedBios.length > 0 && (
+            <div className="bm-card">
+              <div className="bm-card-title">Saved Bios</div>
+              <span className="bm-card-sub">Click to reload into canvas</span>
+              <div className="bm-saved-list">
+                {savedBios.map(b => (
+                  <div key={b.id} className={`bm-saved-item${viewingSaved===b.id?" active":""}`}
+                    onClick={()=>loadSaved(b)}>
+                    <span className="bm-saved-label">
+                      <strong>{b.label}</strong>
+                      {b.text.slice(0,60)}…
+                    </span>
+                    <button className="bm-saved-rm" onClick={e=>{e.stopPropagation();deleteSaved(b.id);}}>✕</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── RIGHT COLUMN: Canvas ── */}
+        <div className="bm-canvas-card">
+          <div className="bm-card-title">Bio Canvas</div>
+          <span className="bm-card-sub">Step 2 — generate, review, and save your bio</span>
+
+          {/* Action row */}
+          <div className="bm-canvas-actions">
+            <button className="bm-gen-btn" onClick={generate}
+              disabled={!inference || !selectedBot || isGenerating || isAnalyzing}>
+              {isGenerating ? "✦ Generating…" : "✦ Generate Bio"}
+            </button>
+            <button className={`bm-save-btn${savedOk?" ok":""}`}
+              disabled={!output.trim() || isGenerating}
+              onClick={saveBio}>
+              {savedOk ? "✓ Saved!" : "⬇ Save Bio"}
+            </button>
+            <button className={`bm-copy-btn${copyOk?" ok":""}`}
+              disabled={!output.trim()}
+              onClick={copyOutput}>
+              {copyOk ? "✓ Copied!" : "⎘ Copy"}
+            </button>
+            <button className="bm-copy-btn" style={{marginLeft:"auto"}}
+              onClick={()=>{
+                setStep(inference?"inferred":"setup");
+                setOutput(""); setThinkContent(""); setError(""); setViewingSaved(null);
+              }}>
+              ↺ Clear
+            </button>
+          </div>
+
+          {/* ThinkBox — ALWAYS mounted when generating or when there's think content.
+              Uses generatingRef directly so it never collapses mid-stream. */}
+          {(isGenerating || thinkContent) && (
+            <BmThinkBox text={thinkContent} isLive={isGenerating} />
+          )}
+
+          {/* Bio output area */}
+          <div className="bm-output-wrap">
+            <span className="bm-section-label">
+              {isGenerating && !output ? "Bio output" : output ? "Bio output" : "Bio output — click Generate Bio to begin"}
+            </span>
+            <div className="bm-output">
+              {output ? output : (
+                isGenerating
+                  ? <span className="bm-output-empty">
+                      {thinkContent ? "Finishing thoughts…" : "Connecting to model…"}
+                    </span>
+                  : <span className="bm-output-empty">
+                      {!inference ? "Analyze references first, then click Generate Bio." : "Ready — click Generate Bio."}
+                    </span>
+              )}
+            </div>
+            {output && (
+              <div className="bm-token-count">~{countTokens(output)} tokens · {output.length} chars</div>
+            )}
+          </div>
+        </div>
       </div>
 
       {error && <div className="bm-error">⚠ {error}</div>}
     </div>
   );
 }
+
+/* ── Biomaker-specific ThinkBox that reads live ref directly ── */
+function BmThinkBox({ text, isLive }) {
+  const [open, setOpen] = React.useState(true); // always open by default
+  const bodyRef = React.useRef(null);
+
+  // Auto-scroll as tokens arrive
+  React.useEffect(() => {
+    if (open && bodyRef.current) {
+      bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
+    }
+  }, [text, open]);
+
+  return (
+    <div className="think-box" style={{marginBottom:"4px"}}>
+      <div className="think-header" onClick={()=>setOpen(o=>!o)}>
+        <span className="think-label">
+          🧠 Thought process{isLive ? <span style={{color:"var(--red)",marginLeft:"6px",animation:"pulse 1s infinite",display:"inline-block"}}>● live</span> : ""}
+        </span>
+        <span className="think-chevron">{open?"▲":"▼"}</span>
+      </div>
+      {open && (
+        <div className="think-body" ref={bodyRef}>
+          {text
+            ? text
+            : <span style={{fontStyle:"italic",opacity:0.5}}>Waiting for model to begin thinking…</span>
+          }
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 /* ═══ ERROR BOUNDARY ═══ */
 class ErrorBoundary extends React.Component {
