@@ -3697,9 +3697,10 @@ function Biomaker({ bots, onBack, settings, dark, onToggle }) {
   const [refs,     setRefs]      = useState([]);
   const [step,     setStep]      = useState("setup");
   const [inference,setInference] = useState(null);
-  const [output,   setOutput]    = useState("");
-  const [copyOk,   setCopyOk]    = useState(false);
-  const [error,    setError]     = useState("");
+  const [output,       setOutput]       = useState("");
+  const [thinkContent, setThinkContent] = useState("");
+  const [copyOk,       setCopyOk]       = useState(false);
+  const [error,        setError]        = useState("");
 
   const MAX_REFS = 5;
   const selectedBot = bots.find(b => b.id === selBotId) || null;
@@ -3839,12 +3840,19 @@ Return ONLY valid JSON (no markdown fences) with this exact structure:
     if (!selectedBot) { setError("Select a scenario card first."); return; }
     if (!inference)   { setError("Analyze references first."); return; }
     if (!settings?.apiKey || !settings?.selectedModel) { setError("API key / model not set."); return; }
-    setError(""); setStep("generating"); setOutput("");
+    setError(""); setStep("generating"); setOutput(""); setThinkContent("");
 
     const dump       = scenarioDump(selectedBot);
     const refContent = buildRefContent(refs);
 
-    const SYS = `You are an expert JanitorAI bot bio writer. Write the bio for the provided scenario, strictly matching every inferred style pattern from the references. Output the bio text only — no explanations, no headers, no markdown fences.`;
+    const SYS = `You are an expert JanitorAI bot bio writer. Your job is to write a character bio that feels like it was written by a thoughtful, experienced human writer.
+
+STRICT RULES — never break these:
+- NEVER use em-dashes (— or –). Replace them with commas, periods, or rewrite the sentence.
+- Do NOT use purple prose or over-the-top dramatic language. If the reference material is very dramatic, dial it back to something interesting but grounded — the kind of thing a skilled human author would write.
+- Write naturally and flowingly. Introduce characters and their world chronologically and systematically, like you are introducing someone fascinating to a new reader. Keep it readable and human, not robotic or list-like.
+- Match the structural pattern, POV, length, and formatting of the references exactly, but filter out melodrama.
+- Output the bio text ONLY. No explanations, no headers, no markdown fences, no meta-commentary.`;
 
     const userContent = [
       { type:"text", text:"Here are the reference bios you studied:" },
@@ -3852,20 +3860,20 @@ Return ONLY valid JSON (no markdown fences) with this exact structure:
       { type:"text", text:
 `Style patterns inferred from those references:
 POV: ${inference.pov}
-Tone: ${inference.tone}
+Tone: ${inference.tone} (apply with restraint — natural and engaging, not overdramatic)
 Structure: ${inference.structure}
 Length: ${inference.length}
 Formatting: ${inference.formatting}
-Vocabulary: ${inference.vocabulary}
+Vocabulary: ${inference.vocabulary} (vivid but never overwrought)
 Opening style: ${inference.openingStyle}
 Unique features: ${inference.uniqueFeatures}
 
-Now write the JanitorAI bot bio for the scenario below. Match the style, structure, length, tone, and formatting of the references exactly. Incorporate all characters, the scenario setting, premise, and dynamics naturally into the bio.
+Now write the JanitorAI bot bio for the scenario below. Follow the structure, length, and formatting of the references. Incorporate all characters, the setting, premise, and dynamics naturally. Write like a skilled human author: clear, specific, engaging.
 
 SCENARIO DATA:
 ${dump}
 
-Write the bio now. Output ONLY the bio text.`
+Write the bio now. Output ONLY the bio text. No em-dashes. No melodrama. No AI-sounding language.`
       }
     ];
 
@@ -3880,28 +3888,49 @@ Write the bio now. Output ONLY the bio text.`
           messages: [{ role:"system", content: SYS }, { role:"user", content: userContent }]
         })
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        const errText = await res.text().catch(() => "");
+        throw new Error(`HTTP ${res.status}${errText ? ": " + errText.slice(0,120) : ""}`);
+      }
+      if (!res.body) throw new Error("No response body — streaming not supported by this endpoint.");
 
-      const reader = res.body.getReader();
-      const dec    = new TextDecoder();
-      let   bio    = "";
+      const reader   = res.body.getReader();
+      const dec      = new TextDecoder();
+      let   rawAll   = "";
+      let   leftover = "";
       setStep("done");
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         const chunk = dec.decode(value, { stream: true });
-        for (const line of chunk.split("\n")) {
+        const lines = (leftover + chunk).split("\n");
+        leftover = lines.pop();
+
+        for (const line of lines) {
           const l = line.trim();
           if (!l || l === "data: [DONE]") continue;
           if (l.startsWith("data: ")) {
             try {
-              const delta = JSON.parse(l.slice(6)).choices?.[0]?.delta?.content;
-              if (typeof delta === "string") { bio += delta; setOutput(bio); }
+              const parsed = JSON.parse(l.slice(6));
+              const delta  = parsed.choices?.[0]?.delta?.content;
+              if (typeof delta === "string") {
+                rawAll += delta;
+                const { thinkContent: tc, content: bio } = parseThink(rawAll);
+                setThinkContent(tc);
+                // Hide any still-open <think> block from main output
+                const visibleBio = bio.replace(/<think>[\s\S]*$/i, "").trim();
+                setOutput(visibleBio);
+              }
             } catch {}
           }
         }
       }
+      // Final clean parse
+      const { thinkContent: tc, content: bio } = parseThink(rawAll);
+      setThinkContent(tc);
+      setOutput(bio);
+
     } catch(e) {
       setError(`Generation failed: ${e.message}`);
       setStep("inferred");
@@ -4057,16 +4086,28 @@ Write the bio now. Output ONLY the bio text.`
                     </button>
                   )}
                   <button className="bm-copy-btn" onClick={()=>{
-                    setStep("setup"); setInference(null); setOutput(""); setError("");
+                    setStep("setup"); setInference(null); setOutput(""); setThinkContent(""); setError("");
                   }} style={{marginLeft:"auto"}}>
                     ↺ Reset
                   </button>
                 </div>
 
-                {hasOutput && (
+                {(hasOutput || isGenerating) && (
                   <div className="bm-output-wrap">
                     <span className="bm-section-label">Generated Bio</span>
-                    <div className="bm-output">{output || <span className="bm-output-empty">Writing…</span>}</div>
+                    {thinkContent && (
+                      <div style={{marginBottom:"10px"}}>
+                        <ThinkBox text={thinkContent} />
+                      </div>
+                    )}
+                    {isGenerating && !output && !thinkContent && (
+                      <div className="bm-inf-loading">Writing bio…</div>
+                    )}
+                    {(output || (isGenerating && thinkContent)) && (
+                      <div className="bm-output">
+                        {output || <span className="bm-output-empty">Thinking…</span>}
+                      </div>
+                    )}
                     {output && <div className="bm-token-count">~{countTokens(output)} tokens · {output.length} chars</div>}
                   </div>
                 )}
