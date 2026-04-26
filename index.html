@@ -990,6 +990,173 @@
     .sp-custom-rm:hover { color:var(--red); }
     .sp-hint { font-family:'Courier Prime',monospace; font-size:0.6rem; color:var(--ink-faint); font-style:italic; padding:4px 2px; }
 
+    /* ═══ BIOMAKER ═══ */
+    .biomaker { max-width: 900px; margin: 0 auto; padding: 40px 28px 120px; }
+    .biomaker-header {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      margin-bottom: 36px; padding-bottom: 14px;
+      border-bottom: 2.5px solid var(--ink); gap: 16px; flex-wrap: wrap;
+    }
+    .biomaker-title { font-family: 'Playfair Display', serif; font-size: clamp(1.7rem, 4vw, 2.4rem); font-weight: 700; line-height: 1; }
+    .biomaker-subtitle { font-family: 'Courier Prime', monospace; font-size: 0.71rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 2px; margin-top: 6px; }
+    .biomaker-back { font-family: 'Courier Prime', monospace; font-size: 0.76rem; background: none; border: none; cursor: pointer; color: var(--ink-mid); text-transform: uppercase; letter-spacing: 1px; }
+    .biomaker-back:hover { color: var(--red); }
+
+    .bm-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+    @media (max-width: 680px) { .bm-layout { grid-template-columns: 1fr; } }
+
+    .bm-card {
+      background: var(--paper); border: 1px solid var(--paper-dark);
+      box-shadow: 4px 5px 0 var(--shadow); padding: 22px 20px;
+    }
+    .bm-card-title {
+      font-family: 'Playfair Display', serif; font-size: 0.95rem; font-weight: 700;
+      margin-bottom: 4px; padding-bottom: 10px; border-bottom: 1px solid var(--paper-line);
+    }
+    .bm-card-sub {
+      font-family: 'Courier Prime', monospace; font-size: 0.6rem; text-transform: uppercase;
+      letter-spacing: 1.5px; color: var(--red); margin-bottom: 12px; display: block;
+    }
+    .bm-section-label {
+      font-family: 'Courier Prime', monospace; font-size: 0.62rem; text-transform: uppercase;
+      letter-spacing: 1.5px; color: var(--ink-faint); margin-bottom: 6px; display: block;
+    }
+
+    /* character selector */
+    .bm-char-sel {
+      font-family: 'Lora', serif; font-size: 0.85rem;
+      background: var(--paper-dark); border: 1.5px solid var(--paper-line);
+      color: var(--ink); padding: 9px 12px; outline: none; width: 100%; cursor: pointer;
+      margin-bottom: 14px;
+    }
+    .bm-char-sel:focus { border-color: var(--ink-mid); }
+    .bm-char-preview {
+      font-family: 'Courier Prime', monospace; font-size: 0.68rem;
+      background: var(--sc-bg); border: 1px dashed var(--paper-line);
+      padding: 9px 12px; color: var(--ink-mid); line-height: 1.7;
+      max-height: 120px; overflow-y: auto;
+    }
+    .bm-char-preview b { color: var(--red); font-weight: 600; }
+    .bm-char-empty { color: var(--ink-faint); font-style: italic; }
+
+    /* reference upload */
+    .bm-ref-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+    .bm-ref-item {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--sc-bg); border: 1px solid var(--paper-line); padding: 7px 10px;
+    }
+    .bm-ref-icon { font-size: 1rem; flex-shrink: 0; }
+    .bm-ref-name {
+      font-family: 'Courier Prime', monospace; font-size: 0.7rem; color: var(--ink-mid);
+      flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .bm-ref-rm {
+      background: none; border: none; cursor: pointer; color: var(--ink-faint);
+      font-size: 0.72rem; padding: 2px 5px; flex-shrink: 0;
+    }
+    .bm-ref-rm:hover { color: var(--red); }
+    .bm-upload-btn {
+      font-family: 'Courier Prime', monospace; font-size: 0.72rem; text-transform: uppercase;
+      letter-spacing: 1px; background: none; border: 1px dashed var(--ink-faint);
+      color: var(--ink-faint); padding: 9px 14px; cursor: pointer;
+      display: block; width: 100%; text-align: center;
+    }
+    .bm-upload-btn:hover { border-color: var(--ink); color: var(--ink); }
+    .bm-upload-btn.maxed { opacity: 0.38; cursor: not-allowed; }
+
+    /* analyze button */
+    .bm-analyze-btn {
+      font-family: 'Courier Prime', monospace; font-size: 0.78rem; text-transform: uppercase;
+      letter-spacing: 1.2px; background: var(--ink); color: var(--paper);
+      border: none; padding: 12px 22px; cursor: pointer; width: 100%; margin-top: 14px;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .bm-analyze-btn:hover:not(:disabled) { background: var(--red); }
+    .bm-analyze-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* inference panel */
+    .bm-inference {
+      grid-column: 1 / -1;
+      background: var(--paper); border: 1px solid var(--paper-dark);
+      box-shadow: 4px 5px 0 var(--shadow); padding: 22px 20px;
+    }
+    .bm-inference-inner { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; margin-bottom: 20px; }
+    .bm-inf-block {
+      background: var(--sc-bg); border: 1px solid var(--paper-line); padding: 12px 14px;
+    }
+    .bm-inf-label {
+      font-family: 'Courier Prime', monospace; font-size: 0.58rem; text-transform: uppercase;
+      letter-spacing: 1.5px; color: var(--red); display: block; margin-bottom: 5px;
+    }
+    .bm-inf-value {
+      font-family: 'Lora', serif; font-size: 0.82rem; color: var(--ink); line-height: 1.55;
+    }
+    .bm-inf-loading {
+      font-family: 'Courier Prime', monospace; font-size: 0.72rem; text-transform: uppercase;
+      letter-spacing: 1.5px; color: var(--ink-faint); padding: 24px 0; text-align: center;
+    }
+    .bm-inf-loading::after {
+      content: ''; display: inline-block; width: 5px; height: 5px;
+      border-radius: 50%; background: var(--red);
+      margin-left: 8px; animation: pulse 1s infinite;
+    }
+
+    /* generate + output */
+    .bm-gen-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .bm-gen-btn {
+      font-family: 'Courier Prime', monospace; font-size: 0.78rem; text-transform: uppercase;
+      letter-spacing: 1.2px; background: var(--red); color: var(--paper);
+      border: none; padding: 12px 26px; cursor: pointer;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .bm-gen-btn:hover:not(:disabled) { background: var(--ink); }
+    .bm-gen-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .bm-copy-btn {
+      font-family: 'Courier Prime', monospace; font-size: 0.76rem; text-transform: uppercase;
+      letter-spacing: 1px; background: none; border: 1.5px solid var(--ink-faint);
+      color: var(--ink-faint); padding: 11px 18px; cursor: pointer;
+    }
+    .bm-copy-btn:hover { border-color: var(--ink); color: var(--ink); }
+    .bm-copy-btn.ok { background: #2c6e3a; color: var(--paper); border-color: #2c6e3a; }
+
+    .bm-output-wrap { margin-top: 20px; }
+    .bm-output {
+      font-family: 'Lora', serif; font-size: 0.88rem; color: var(--ink);
+      background: var(--sc-bg); border: 1px solid var(--paper-line);
+      padding: 18px 18px; line-height: 1.8; white-space: pre-wrap;
+      min-height: 120px; max-height: 520px; overflow-y: auto;
+    }
+    .bm-output-empty {
+      font-family: 'Courier Prime', monospace; font-size: 0.7rem; color: var(--ink-faint);
+      text-align: center; padding: 40px 0; text-transform: uppercase; letter-spacing: 1px;
+      font-style: italic;
+    }
+    .bm-token-count {
+      font-family: 'Courier Prime', monospace; font-size: 0.6rem; color: var(--ink-faint);
+      text-transform: uppercase; letter-spacing: 1px; margin-top: 6px; text-align: right;
+    }
+
+    /* error */
+    .bm-error {
+      font-family: 'Courier Prime', monospace; font-size: 0.72rem; color: var(--red);
+      background: var(--paper); border: 1.5px solid var(--red); padding: 10px 14px;
+      margin-top: 12px;
+    }
+
+    /* step indicator */
+    .bm-steps {
+      display: flex; gap: 0; margin-bottom: 28px; overflow: hidden;
+      border: 1px solid var(--paper-line); width: fit-content;
+    }
+    .bm-step {
+      font-family: 'Courier Prime', monospace; font-size: 0.62rem; text-transform: uppercase;
+      letter-spacing: 1px; padding: 7px 14px; color: var(--ink-faint);
+      border-right: 1px solid var(--paper-line); white-space: nowrap;
+    }
+    .bm-step:last-child { border-right: none; }
+    .bm-step.active { background: var(--ink); color: var(--paper); }
+    .bm-step.done { color: var(--red); }
+
   </style>
 </head>
 <body>
@@ -1790,7 +1957,8 @@ function App() {
 
   const goNew  = () => { setEditBot(newBot()); setView("editor"); };
   const goEdit = b  => { setPreviewBot(null); setEditBot(JSON.parse(JSON.stringify(b))); setView("editor"); };
-  const goBack = () => { setView("dash"); setEditBot(null); liveDraftRef.current=null; setRightOpen(false); };
+  const goBack     = () => { setView("dash"); setEditBot(null); liveDraftRef.current=null; setRightOpen(false); };
+  const goBiomaker = () => { setView("biomaker"); };
 
   const handleSave = b => {
     setBots(p=>{const i=p.findIndex(x=>x.id===b.id);if(i>=0){const n=[...p];n[i]=b;return n;}return[...p,b];});
@@ -1855,7 +2023,9 @@ function App() {
       {view==="dash"
         ? <Dashboard bots={bots} onNew={goNew} onPreview={setPreviewBot}
             dark={dark} onToggle={toggle} onSettings={()=>setLeftOpen(true)}
-            userBtn={userBtn}/>
+            userBtn={userBtn} onBiomaker={goBiomaker}/>
+        : view==="biomaker"
+        ? <Biomaker bots={bots} onBack={()=>setView("dash")} settings={settings} dark={dark} onToggle={toggle}/>
         : <BotEditor
             bot={editBot} onSave={handleSave} onBack={goBack}
             onDraftChange={d=>{liveDraftRef.current=d;}}
@@ -2685,7 +2855,7 @@ function RightPanel({ open, onClose, settings, getDraft, chatHistory, setChatHis
 /* ═══════════════════════════════
    DASHBOARD
 ═══════════════════════════════ */
-function Dashboard({ bots, onNew, onPreview, dark, onToggle, onSettings, userBtn }) {
+function Dashboard({ bots, onNew, onPreview, dark, onToggle, onSettings, userBtn, onBiomaker }) {
   return (
     <div className="dashboard">
       <div className="dash-header">
@@ -2696,6 +2866,7 @@ function Dashboard({ bots, onNew, onPreview, dark, onToggle, onSettings, userBtn
         <div className="dash-actions">
           <button className="btn-dash-util" onClick={onSettings}>⚙ Settings</button>
           <button className="btn-dash-util" onClick={onToggle}>{dark?"☀ Light":"☾ Dark"}</button>
+          <button className="btn-dash-util" onClick={onBiomaker} style={{borderColor:"var(--red)",color:"var(--red)"}}>✦ Biomaker</button>
           {userBtn}
           <button className="btn-new" onClick={onNew}>＋ New Character</button>
         </div>
@@ -3514,6 +3685,392 @@ function RulesSection({ rules, onChange }) {
         ))}
       </div>
       <button className="gadd" style={{marginTop:"10px"}} onClick={add}>＋ Add Rule</button>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════
+   BIOMAKER
+═══════════════════════════════ */
+function Biomaker({ bots, onBack, settings, dark, onToggle }) {
+  /* flatten all characters across all bots into a pick-list */
+  const charList = [];
+  bots.forEach(bot => {
+    bot.characters.forEach((c, ci) => {
+      charList.push({ botId: bot.id, charIdx: ci, bot, char: c,
+        label: `${c.name || `Character ${ci+1}`} — ${bot.title || "Untitled"}` });
+    });
+  });
+
+  const [selKey,   setSelKey]   = useState(charList.length ? `${charList[0].botId}_${charList[0].charIdx}` : "");
+  const [refs,     setRefs]     = useState([]); // [{name, type:"text"|"image", content:string, b64?:string}]
+  const [step,     setStep]     = useState("setup"); // setup | analyzing | inferred | generating | done
+  const [inference,setInference]= useState(null); // parsed object from AI
+  const [output,   setOutput]   = useState("");
+  const [copyOk,   setCopyOk]   = useState(false);
+  const [error,    setError]    = useState("");
+
+  const MAX_REFS = 5;
+
+  const selectedEntry = charList.find(e => `${e.botId}_${e.charIdx}` === selKey) || null;
+  const selectedChar  = selectedEntry?.char || null;
+  const selectedBot   = selectedEntry?.bot  || null;
+
+  /* ── Build a compact character summary for the prompt ── */
+  function charSummary(c, bot) {
+    const lines = [];
+    lines.push(`Name: ${c.name || "Unknown"}`);
+    if (c.age)    lines.push(`Age: ${c.age}`);
+    if (c.gender) lines.push(`Gender: ${c.gender}`);
+    if (c.height) lines.push(`Height: ${c.height}`);
+    if (c.physicalAppearances?.trim()) lines.push(`Appearance: ${c.physicalAppearances.trim()}`);
+    if (c.personality?.length) lines.push(`Personality: ${c.personality.join(", ")}`);
+    if (c.motivation?.trim()) lines.push(`Motivation: ${c.motivation.trim()}`);
+    const bs = (c.backstory||[]).map(e=>e.text?.trim()).filter(Boolean);
+    if (bs.length) lines.push(`Backstory:\n${bs.map(b=>`• ${b}`).join("\n")}`);
+    if (c.intimacyDetails?.trim()) lines.push(`Intimacy: ${c.intimacyDetails.trim()}`);
+    const sp = c.speechPatterns;
+    if (sp) {
+      const slines = sp.mode==="custom"
+        ? (sp.customLines||[]).filter(l=>l.trim())
+        : (sp.selectedLines||[]);
+      if (slines.length) lines.push(`Speech examples:\n${slines.map(l=>`• "${l}"`).join("\n")}`);
+    }
+    if (bot?.scenario?.setting?.trim()) lines.push(`Setting: ${bot.scenario.setting.trim()}`);
+    if (bot?.scenario?.premise?.trim()) lines.push(`Premise: ${bot.scenario.premise.slice(0,400)}`);
+    return lines.join("\n");
+  }
+
+  /* ── File upload handler ── */
+  const handleFileUpload = async (files) => {
+    if (!files || refs.length >= MAX_REFS) return;
+    const toAdd = Array.from(files).slice(0, MAX_REFS - refs.length);
+    const parsed = await Promise.all(toAdd.map(f => new Promise(resolve => {
+      const isImage = f.type.startsWith("image/");
+      const reader  = new FileReader();
+      if (isImage) {
+        reader.onload = ev => resolve({ name: f.name, type:"image", b64: ev.target.result.split(",")[1], mediaType: f.type });
+      } else {
+        reader.onload = ev => resolve({ name: f.name, type:"text",  content: ev.target.result });
+      }
+      isImage ? reader.readAsDataURL(f) : reader.readAsText(f);
+    })));
+    setRefs(r => [...r, ...parsed]);
+    setError("");
+  };
+
+  const removeRef = i => setRefs(r => r.filter((_,j)=>j!==i));
+
+  /* ── Build the multimodal messages array for the Chutes API ── */
+  function buildRefContent(refs) {
+    const parts = [];
+    refs.forEach((ref, i) => {
+      if (ref.type === "image") {
+        parts.push({ type: "text", text: `[Reference ${i+1}: image file "${ref.name}"]` });
+        parts.push({ type: "image_url", image_url: { url: `data:${ref.mediaType};base64,${ref.b64}` } });
+      } else {
+        parts.push({ type: "text", text: `[Reference ${i+1}: "${ref.name}"]\n${ref.content}` });
+      }
+    });
+    return parts;
+  }
+
+  /* ── Analyze references ── */
+  const analyze = async () => {
+    if (!refs.length) { setError("Upload at least one reference bio first."); return; }
+    if (!settings?.apiKey) { setError("No API key set. Open ⚙ Settings and enter your Chutes API key."); return; }
+    if (!settings?.selectedModel) { setError("No model selected. Open ⚙ Settings and pick a model."); return; }
+    setError(""); setStep("analyzing");
+
+    const hasImages = refs.some(r => r.type === "image");
+    const refContent = buildRefContent(refs);
+
+    const SYS = `You are a JanitorAI bot bio analyst. Study the provided reference bios and extract detailed patterns.
+Return ONLY valid JSON (no markdown fences) with this exact structure:
+{
+  "pov": "string — e.g. '2nd person (You are...)', '3rd person narrator', 'mixed'",
+  "tone": "string — e.g. 'dark and melancholic', 'playful and teasing', 'formal and precise'",
+  "structure": "string — describe the layout sections in order, e.g. 'Opening hook sentence → Appearance block → Personality → Backstory → Relationship hint'",
+  "length": "string — e.g. 'short (100-200 words)', 'medium (300-500 words)', 'long (600+ words)'",
+  "formatting": "string — describe use of line breaks, brackets, separators, bold/italic markers, headers, etc.",
+  "vocabulary": "string — describe word choice style, e.g. 'literary and poetic', 'direct and punchy', 'technical jargon-heavy'",
+  "openingStyle": "string — describe how bios typically open (e.g. 'starts with character name + epithet', 'opens in scene', 'begins with a quote')",
+  "uniqueFeatures": "string — any distinctive quirks: emoji use, special characters, recurring phrases, unusual formatting, etc.",
+  "summary": "string — 2-3 sentence overall characterization of what makes these bios distinctive"
+}`;
+
+    const userParts = [
+      { type: "text", text: `Analyze these ${refs.length} reference JanitorAI bio(s) and return the JSON inference:` },
+      ...refContent
+    ];
+
+    try {
+      const body = {
+        model: settings.selectedModel, max_tokens: 1200, stream: false,
+        messages: [
+          { role: "system", content: SYS },
+          { role: "user",   content: userParts }
+        ]
+      };
+      const res = await fetch(`${CHUTES_BASE}/chat/completions`, {
+        method: "POST",
+        headers: { "Content-Type":"application/json", "Authorization":`Bearer ${settings.apiKey}` },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const d   = await res.json();
+      let raw   = (d.choices?.[0]?.message?.content || "").trim();
+      raw       = raw.replace(/```json|```/g,"").trim();
+      const inf = JSON.parse(raw);
+      setInference(inf);
+      setStep("inferred");
+    } catch(e) {
+      setError(`Analysis failed: ${e.message}`);
+      setStep("setup");
+    }
+  };
+
+  /* ── Generate bio ── */
+  const generate = async () => {
+    if (!selectedChar) { setError("Select a character first."); return; }
+    if (!inference)    { setError("Analyze references first."); return; }
+    if (!settings?.apiKey || !settings?.selectedModel) { setError("API key / model not set."); return; }
+    setError(""); setStep("generating"); setOutput("");
+
+    const summary = charSummary(selectedChar, selectedBot);
+    const refContent = buildRefContent(refs);
+
+    const SYS = `You are an expert JanitorAI bot bio writer. Write the bio for the provided character, strictly following the inferred style patterns. Do not explain yourself. Output the bio text only — no headers, no meta-commentary, no markdown fences.`;
+
+    const userParts = [
+      { type:"text", text:
+`Here are the reference bios you studied:` },
+      ...refContent,
+      { type:"text", text:
+`These are the style patterns inferred from those references:
+POV: ${inference.pov}
+Tone: ${inference.tone}
+Structure: ${inference.structure}
+Length: ${inference.length}
+Formatting: ${inference.formatting}
+Vocabulary: ${inference.vocabulary}
+Opening style: ${inference.openingStyle}
+Unique features: ${inference.uniqueFeatures}
+
+Now write the JanitorAI bot bio for this character. Match the style, structure, length, tone, and formatting of the references exactly.
+
+CHARACTER DATA:
+${summary}
+
+Write the bio now. Output ONLY the bio text.`
+      }
+    ];
+
+    try {
+      const res = await fetch(`${CHUTES_BASE}/chat/completions`, {
+        method: "POST",
+        headers: { "Content-Type":"application/json", "Authorization":`Bearer ${settings.apiKey}` },
+        body: JSON.stringify({
+          model: settings.selectedModel,
+          max_tokens: Math.max(settings.proxyMaxTokens || 1500, 2000),
+          stream: true,
+          messages: [
+            { role:"system", content: SYS },
+            { role:"user",   content: userParts }
+          ]
+        })
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const reader = res.body.getReader();
+      const dec    = new TextDecoder();
+      let   bio    = "";
+      setStep("done");
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = dec.decode(value, { stream: true });
+        for (const line of chunk.split("\n")) {
+          const l = line.trim();
+          if (!l || l === "data: [DONE]") continue;
+          if (l.startsWith("data: ")) {
+            try {
+              const delta = JSON.parse(l.slice(6)).choices?.[0]?.delta?.content;
+              if (typeof delta === "string") { bio += delta; setOutput(bio); }
+            } catch {}
+          }
+        }
+      }
+    } catch(e) {
+      setError(`Generation failed: ${e.message}`);
+      setStep("inferred");
+    }
+  };
+
+  const copyOutput = () => {
+    navigator.clipboard.writeText(output).then(() => {
+      setCopyOk(true); setTimeout(() => setCopyOk(false), 2200);
+    });
+  };
+
+  const INF_FIELDS = [
+    { key:"pov",           label:"Point of View"   },
+    { key:"tone",          label:"Tone"             },
+    { key:"openingStyle",  label:"Opening Style"    },
+    { key:"structure",     label:"Structure"        },
+    { key:"length",        label:"Length"           },
+    { key:"formatting",    label:"Formatting"       },
+    { key:"vocabulary",    label:"Vocabulary"       },
+    { key:"uniqueFeatures",label:"Unique Features"  },
+    { key:"summary",       label:"Overall Read"     },
+  ];
+
+  const isAnalyzing  = step === "analyzing";
+  const isGenerating = step === "generating";
+  const hasInference = step === "inferred" || step === "generating" || step === "done";
+  const hasOutput    = step === "done" || (step === "generating" && output);
+
+  return (
+    <div className="biomaker">
+      {/* header */}
+      <div className="biomaker-header">
+        <div>
+          <div className="biomaker-title">✦ Biomaker</div>
+          <div className="biomaker-subtitle">JanitorAI Bot Bio Generator</div>
+        </div>
+        <button className="biomaker-back" onClick={onBack}>← Back to Dashboard</button>
+      </div>
+
+      {/* step indicator */}
+      <div className="bm-steps">
+        <div className={`bm-step ${step==="setup"?"active":hasInference?"done":""}`}>1. Select &amp; Upload</div>
+        <div className={`bm-step ${step==="analyzing"?"active":hasInference?"done":""}`}>2. Analyze</div>
+        <div className={`bm-step ${step==="inferred"?"active":hasOutput?"done":""}`}>3. Review Style</div>
+        <div className={`bm-step ${step==="generating"?"active":step==="done"?"done":""}`}>4. Generate</div>
+      </div>
+
+      <div className="bm-layout">
+        {/* ── LEFT: Character picker ── */}
+        <div className="bm-card">
+          <div className="bm-card-title">Character</div>
+          <span className="bm-card-sub">Step 1a — pick who the bio is for</span>
+
+          {charList.length === 0 ? (
+            <div className="bm-char-preview" style={{marginTop:0}}>
+              <span className="bm-char-empty">No characters yet — create one from the dashboard first.</span>
+            </div>
+          ) : (
+            <>
+              <span className="bm-section-label">Select character</span>
+              <select className="bm-char-sel" value={selKey} onChange={e=>setSelKey(e.target.value)}>
+                {charList.map(e=>(
+                  <option key={`${e.botId}_${e.charIdx}`} value={`${e.botId}_${e.charIdx}`}>{e.label}</option>
+                ))}
+              </select>
+              {selectedChar && (
+                <>
+                  <span className="bm-section-label">Character snapshot</span>
+                  <div className="bm-char-preview">
+                    {selectedChar.name && <><b>{selectedChar.name}</b><br/></>}
+                    {selectedChar.age && <>{selectedChar.age}y · </>}
+                    {selectedChar.gender && <>{selectedChar.gender}</>}
+                    {selectedChar.height && <> · {selectedChar.height}</>}
+                    {selectedChar.personality?.length > 0 && <><br/><em>{selectedChar.personality.slice(0,5).join(", ")}</em></>}
+                    {selectedChar.motivation?.trim() && <><br/>↳ {selectedChar.motivation.slice(0,100)}{selectedChar.motivation.length>100?"…":""}</>}
+                  </div>
+                </>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* ── RIGHT: Reference upload ── */}
+        <div className="bm-card">
+          <div className="bm-card-title">Reference Bios</div>
+          <span className="bm-card-sub">Step 1b — up to 5 example bios to learn from</span>
+          <span className="bm-section-label">Uploaded ({refs.length}/{MAX_REFS}) — text files or screenshots</span>
+
+          {refs.length > 0 && (
+            <div className="bm-ref-list">
+              {refs.map((r,i) => (
+                <div className="bm-ref-item" key={i}>
+                  <span className="bm-ref-icon">{r.type==="image"?"🖼":"📄"}</span>
+                  <span className="bm-ref-name">{r.name}</span>
+                  <button className="bm-ref-rm" onClick={()=>removeRef(i)}>✕</button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <label className={`bm-upload-btn${refs.length>=MAX_REFS?" maxed":""}`}>
+            {refs.length>=MAX_REFS ? `Max ${MAX_REFS} references reached` : `＋ Upload reference${refs.length?` (${MAX_REFS-refs.length} left)`:""}`}
+            <input type="file" multiple accept=".txt,.md,text/plain,text/markdown,image/*"
+              style={{display:"none"}} disabled={refs.length>=MAX_REFS}
+              onChange={e=>{ handleFileUpload(e.target.files); e.target.value=""; }}/>
+          </label>
+
+          <div style={{marginTop:"8px",fontFamily:"'Courier Prime',monospace",fontSize:"0.62rem",color:"var(--ink-faint)",lineHeight:1.7}}>
+            Upload .txt/.md files with bio text, or screenshots/images of JanitorAI bios. The AI reads both.
+          </div>
+
+          <button className="bm-analyze-btn" onClick={analyze}
+            disabled={!refs.length || isAnalyzing || isGenerating}>
+            {isAnalyzing ? "Analyzing references…" : "⊙ Analyze References"}
+          </button>
+        </div>
+
+        {/* ── INFERENCE PANEL (full-width) ── */}
+        {(hasInference || isAnalyzing) && (
+          <div className="bm-inference">
+            <div className="bm-card-title">Style Inference</div>
+            <span className="bm-card-sub">What the AI inferred from your references</span>
+
+            {isAnalyzing ? (
+              <div className="bm-inf-loading">Reading references</div>
+            ) : inference && (
+              <>
+                <div className="bm-inference-inner">
+                  {INF_FIELDS.map(f => inference[f.key] && (
+                    <div className="bm-inf-block" key={f.key}
+                      style={f.key==="summary"||f.key==="structure"?{gridColumn:"1/-1"}:{}}>
+                      <span className="bm-inf-label">{f.label}</span>
+                      <div className="bm-inf-value">{inference[f.key]}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="bm-gen-row">
+                  <button className="bm-gen-btn" onClick={generate}
+                    disabled={!selectedChar || isGenerating}>
+                    {isGenerating ? "Writing bio…" : "✦ Generate Bio"}
+                  </button>
+                  {hasOutput && (
+                    <button className={`bm-copy-btn${copyOk?" ok":""}`} onClick={copyOutput}>
+                      {copyOk ? "✓ Copied!" : "⎘ Copy Bio"}
+                    </button>
+                  )}
+                  <button className="bm-copy-btn" onClick={()=>{
+                    setStep("setup"); setInference(null); setOutput(""); setError("");
+                  }} style={{marginLeft:"auto"}}>
+                    ↺ Reset
+                  </button>
+                </div>
+
+                {hasOutput && (
+                  <div className="bm-output-wrap">
+                    <span className="bm-section-label">Generated Bio</span>
+                    <div className="bm-output">{output || <span className="bm-output-empty">Writing…</span>}</div>
+                    {output && <div className="bm-token-count">~{countTokens(output)} tokens · {output.length} chars</div>}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      {error && <div className="bm-error">⚠ {error}</div>}
     </div>
   );
 }
